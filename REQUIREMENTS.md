@@ -45,6 +45,7 @@ _Do uzupełnienia._
 - Kategorie mają dowolną głębokość zagnieżdżenia, np. rachunki -> media -> prąd.
 - Kategoria może mieć dodatkowo wpisywane zużycie (np. kWh dla prądu) obok kwoty.
 - Brak rozliczeń między domownikami (kto komu jest winien). Jeśli ktoś zapłaci prywatną kartą i zwróci sobie z konta wspólnego, zmienia w wydatku rodzaj płatności na wspólną.
+- Autoryzacja: jeden użytkownik z hasłem, sesja zapamiętana w PWA; bez zaawansowanych mechanizmów.
 - Uproszczenie istniejącego kodu: rezygnujemy z rejestracji, resetu hasła mailem i zdjęcia profilu (jedno wspólne konto).
 - Dane testowe z `data.sql` (losowe wydatki i przychody dla `admin`) do usunięcia.
 - Poza zakresem: historia zmian wydatków, automatyczny koszt jednostkowy (zł/kWh), załączniki (paragony), eksport/import CSV, powiadomienia, cele oszczędnościowe, wiele walut.
@@ -54,6 +55,8 @@ _Do uzupełnienia._
 - [ ] Aplikacja PWA (instalowalna na telefonie) - wymóg obowiązkowy.
 - [ ] UI mobile-first: większość użycia będzie z telefonu, desktop jest drugorzędny.
 - [ ] Szybkie dodawanie wydatku (mało kroków, wygodne na telefonie).
+- [ ] Autoryzacja prosta: jeden użytkownik, logowanie hasłem, żeby osoby postronne nie widziały danych. Aplikacja tylko do użytku prywatnego, bez zaawansowanych opcji (bez ról, rejestracji, resetu hasła, 2FA itp.).
+- [ ] Zalogowanie jest zapamiętywane w PWA (długa sesja), żeby nie wpisywać hasła przy każdym otwarciu aplikacji na telefonie.
 
 ## Wytyczne techniczne
 

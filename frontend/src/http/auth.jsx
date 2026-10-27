@@ -1,4 +1,4 @@
-import { API_URL, ApiError, errorText } from "./base";
+import { API_URL, ApiError, NetworkError, OFFLINE_MESSAGE, errorText } from "./base";
 
 async function readToken(response) {
   if (!response.ok) {
@@ -18,10 +18,16 @@ async function readToken(response) {
   localStorage.setItem("token", result.token);
 }
 
+async function post(path, options) {
+  try {
+    return await fetch(`${API_URL}${path}`, { method: "POST", credentials: "include", ...options });
+  } catch {
+    throw new NetworkError(OFFLINE_MESSAGE);
+  }
+}
+
 export async function login(values) {
-  const response = await fetch(`${API_URL}/auth/authenticate`, {
-    method: "POST",
-    credentials: "include",
+  const response = await post("/auth/authenticate", {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(values),
   });
@@ -29,10 +35,7 @@ export async function login(values) {
 }
 
 export async function refreshToken() {
-  const response = await fetch(`${API_URL}/auth/refresh-token`, {
-    method: "POST",
-    credentials: "include",
-  });
+  const response = await post("/auth/refresh-token");
   await readToken(response);
 }
 

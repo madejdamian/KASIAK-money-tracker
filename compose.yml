@@ -31,9 +31,11 @@ services:
     build:
       context: frontend
       dockerfile: Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:8080/expense-tracker/api/v1}
     container_name: et_frontend
     ports:
-      - "5173:5173"
+      - "5173:80"
     networks:
       - et_network
 

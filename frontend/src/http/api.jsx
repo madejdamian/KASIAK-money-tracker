@@ -1,15 +1,19 @@
 import { refreshToken } from "./auth";
-import { API_URL, ApiError, errorText } from "./base";
+import { API_URL, ApiError, NetworkError, OFFLINE_MESSAGE, errorText } from "./base";
 
-function send(path, { method = "GET", body } = {}) {
-  return fetch(`${API_URL}${path}`, {
-    method,
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + localStorage.getItem("token"),
-    },
-    body: body === undefined ? undefined : JSON.stringify(body),
-  });
+async function send(path, { method = "GET", body } = {}) {
+  try {
+    return await fetch(`${API_URL}${path}`, {
+      method,
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + localStorage.getItem("token"),
+      },
+      body: body === undefined ? undefined : JSON.stringify(body),
+    });
+  } catch {
+    throw new NetworkError(OFFLINE_MESSAGE);
+  }
 }
 
 function isUnauthorized(response) {
@@ -29,7 +33,8 @@ export async function api(path, options = {}) {
   if (isUnauthorized(response)) {
     try {
       await refreshToken();
-    } catch {
+    } catch (error) {
+      if (error instanceof NetworkError) throw error;
       endSession();
       throw new ApiError("Sesja wygasła. Zaloguj się ponownie.");
     }

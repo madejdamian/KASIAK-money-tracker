@@ -111,7 +111,7 @@ public class JwtService {
         cookie.setHttpOnly(true);
         // cookie is added only to the refresh token endpoint (cookiePath)
         cookie.setPath(cookiePath);
-        int cookieMaxAge = (int) refreshTokenExpiration / 1000;
+        int cookieMaxAge = (int) (refreshTokenExpiration / 1000);
         cookie.setMaxAge(cookieMaxAge);
         return cookie;
     }

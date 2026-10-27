@@ -1,44 +1,49 @@
-# 💡 **Overview**
+# Budżet domowy
 
-The Expense Tracker app is designed to help you monitor your income and expenses efficiently, offering an easy-to-use interface for managing personal finances. With powerful features like transaction categorization, budget setting, and financial goal tracking, this app is perfect for anyone looking to take control of their financial situation.
+Prywatna aplikacja do śledzenia wydatków i wspólnego budżetu domowego. Działa jako PWA
+(instalowalna na telefonie), interfejs jest po polsku i projektowany najpierw pod telefon.
 
-By visualizing your spending through detailed **charts** and **graphs**, it provides valuable insights into your financial behavior, helping you make more informed decisions about your money.
+## Co potrafi
 
-## ⚙️ **Features**
+- **Budżet miesięczny:** wpłaty domowników na wspólne konto (miesięczne i dodatkowe), wydatki ze
+  wspólnej karty, saldo. Dodatnie saldo przechodzi na kolejny miesiąc, ujemne nie.
+- **Wydatki:** kategorie o dowolnej głębokości (np. Opłaty › Media › Prąd), domownik, karta
+  prywatna lub wspólna, zużycie (np. kWh), tagi, wyszukiwanie i filtry.
+- **Automatyzacja:** wydatki cykliczne do potwierdzenia co miesiąc, szablony do szybkiego dodawania.
+- **Analizy:** podział wg kategorii z drill-downem, porównanie z poprzednim miesiącem i rokiem
+  wcześniej, trend z 12 miesięcy (także zużycia), analiza tagów (projektów).
+- Jedno wspólne konto chronione hasłem; logowanie jest zapamiętywane (długa sesja).
 
-- **Track Income and Expenses**  
-   Easily log your income and expenses to keep track of your financial transactions.
-- **Visual Insights**  
-   Gain a clear understanding of your spending habits through intuitive charts and graphs,  
-   helping you spot trends and areas for potential savings.
-- **Transaction History**  
-   View a detailed history of all transactions, categorized for easy analysis.
+Wymagania, ustalenia i stan prac: [`REQUIREMENTS.md`](REQUIREMENTS.md).
 
+## Stack
 
-## 🛠️ **Tech Stack**
+- Backend: Java 17, Spring Boot, PostgreSQL, Flyway, JWT
+- Frontend: React, Vite, Tailwind CSS, TanStack Query
+- Docker Compose
 
-- Frontend: **React, Tailwind CSS**
-- Backend: **Java 17, Spring Boot**
-- Database: **PostgreSQL**
-- State Management: **TanStack Query**
-- Containerization: **Docker**
+## Uruchomienie
 
+1. Skopiuj `backend/.env.example` do `backend/.env-dev` i ustaw co najmniej `JWT_SECRET_KEY`
+   (np. `openssl rand -base64 32`) oraz `APP_USERNAME` i `APP_PASSWORD`, czyli dane logowania
+   jedynego konta (są ustawiane przy każdym starcie backendu).
+2. `docker compose up --build`
+3. Aplikacja: http://localhost:5173, dokumentacja API (Swagger): http://localhost:8080
 
-## 📱 **Screenshots**
-![et_5](https://github.com/user-attachments/assets/97e2bf6d-d8cf-4aba-92e6-976b31c50dab)
+Frontend w kontenerze jest zbudowany produkcyjnie. Do pracy nad kodem: `cd frontend && npm install
+&& npm run dev` (service worker działa tylko w buildzie produkcyjnym). Testy: `cd frontend && npm test`
+oraz `cd backend && ./mvnw test`.
 
----
+## Instalacja na telefonie (PWA)
 
-![et_1](https://github.com/user-attachments/assets/1a8ca2e7-b3f3-4bae-a220-486cb382e703)
+Przeglądarka pozwala zainstalować aplikację tylko przez **HTTPS** (wyjątkiem jest `localhost`).
+Do codziennego użytku postaw ją za reverse proxy z certyfikatem (np. Caddy lub nginx) i, jeśli
+się da, serwuj frontend i API pod tą samą domeną (np. `/` i `/expense-tracker/api`), a przy budowaniu
+frontendu ustaw `VITE_API_URL` na adres API widoczny z przeglądarki oraz `FRONTEND_PORT` w backendzie
+na adres frontendu (CORS).
 
----
+- Android (Chrome): Ustawienia w aplikacji › „Zainstaluj aplikację” albo menu przeglądarki.
+- iPhone (Safari): Udostępnij › „Do ekranu początkowego”.
 
-![et_2](https://github.com/user-attachments/assets/e2dac5cb-0564-4751-ad50-84eaea6d6af7)
-
----
-
-![et_3](https://github.com/user-attachments/assets/c9e31883-a0ed-483b-8484-7a79f1e6e88f)
-
----
-
-![et_4](https://github.com/user-attachments/assets/c35a887b-970e-41ed-9e8a-2be1732246f6)
+Sesja: token dostępu odnawia się sam, a ciasteczko odświeżające żyje domyślnie pół roku
+(`JWT_REFRESH_EXPIRATION`) i przedłuża się przy każdym odnowieniu, więc hasło wpisujesz rzadko.

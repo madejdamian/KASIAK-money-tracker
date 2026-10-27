@@ -95,8 +95,8 @@ Stan na dzień analizy (kod pochodzi z gotowego projektu).
 | Wyszukiwanie i filtry | Jest (bez uruchomienia) | Lista wydatków: szukanie tekstu oraz filtry po kategorii (z podkategoriami), domowniku, karcie i kwocie |
 | Szablony / ostatnie wydatki | Jest (bez uruchomienia) | Szablony (`/templates`) jako przyciski szybkiego dodawania z cofnięciem, „Zapisz jako szablon” i „Kopiuj jako nowy” w formularzu wydatku |
 | Tagi | Jest (bez uruchomienia) | Tagi w wydatku (po przecinku), filtr po tagu, ekran „Tagi” z sumą projektu i podziałem na kategorie |
-| PWA | Brak | Brak manifestu, service workera i wtyczki PWA w Vite |
-| UI mobile-first | Częściowo | Widoki mają klasy responsywne (Tailwind), ale to układ desktop-first i trzeba go przejrzeć pod telefon |
+| PWA | Jest (bez uruchomienia) | Manifest, ikony, ręczny service worker (powłoka aplikacji offline), przycisk instalacji w Ustawieniach; wymaga buildu produkcyjnego i HTTPS |
+| UI mobile-first | Jest (bez uruchomienia) | Nowy interfejs od zera pod telefon (dolna nawigacja, duże pola, 16 px, bezpieczne marginesy); wymaga sprawdzenia na prawdziwym urządzeniu |
 | Logowanie | Jest | Zostaje jedno wspólne konto (JWT). Rejestracja, reset hasła, e-mail, zdjęcie profilu i ustawienia usunięte w etapie 1 |
 
 ### Uwagi do decyzji
@@ -130,3 +130,13 @@ Stan na dzień analizy (kod pochodzi z gotowego projektu).
 - Frontend: ekrany Cykliczne, Szablony, Tagi, szybkie dodawanie na liście wydatków, karta „do potwierdzenia” na ekranie Budżet, odnośniki w Ustawieniach.
 - Tagi nie są jeszcze dostępne w regułach i szablonach (tylko w zwykłych wydatkach).
 - Nic z tego nie zostało zbudowane ani uruchomione (brak dostępu do Mavena i npm); logika analiz po stronie przeglądarki ma testy (`npm test`), testy backendu napisane, ale niesprawdzone.
+
+### Etap 7 (PWA i sesja) - stan
+- Frontend: `manifest.webmanifest`, ikony (192, 512, maskable, apple-touch), `sw.js` (powłoka aplikacji offline, dane z API nigdy nie są cache'owane), rejestracja tylko w buildzie produkcyjnym, przycisk „Zainstaluj aplikację” i podpowiedź dla iPhone'a w Ustawieniach, czytelny komunikat przy braku połączenia.
+- Sesja: po starcie bez zapisanego tokenu aplikacja próbuje odnowić logowanie z ciasteczka; odnowienie przedłuża ciasteczko (sesja przesuwna). Błąd sieci nie wylogowuje.
+- Poprawka w backendzie: czas życia ciasteczka odświeżającego przepełniał `int` przy długich wartościach (powyżej ok. 24 dni), więc „pół roku” nie działałoby; teraz liczone poprawnie (test `JwtServiceTest`).
+- Wdrożenie: frontend w Dockerze budowany produkcyjnie i serwowany przez nginx (port 5173), `README.md` opisuje uruchomienie i instalację na telefonie.
+- Instalacja na telefonie wymaga HTTPS (poza `localhost`) i najlepiej wspólnej domeny frontendu i API.
+
+## Podsumowanie
+Wszystkie 7 etapów jest napisanych. Żaden z etapów od 2 do 7 nie został zbudowany ani uruchomiony w środowisku sesji (brak dostępu do Mavena i npm). Pierwszy krok przed użyciem: `docker compose up --build`, `mvn test`, `npm test` i `npm run lint`, a potem poprawienie ewentualnych błędów kompilacji.

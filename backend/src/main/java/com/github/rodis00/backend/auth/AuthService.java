@@ -1,7 +1,6 @@
 package com.github.rodis00.backend.auth;
 
 import com.github.rodis00.backend.config.jwt.JwtService;
-import com.github.rodis00.backend.config.jwt.TokenResponse;
 import com.github.rodis00.backend.entity.UserEntity;
 import com.github.rodis00.backend.exception.*;
 import com.github.rodis00.backend.user.UserRepository;
@@ -56,7 +55,7 @@ public class AuthService {
         return new AuthResponse(jwtToken, cookie);
     }
 
-    public TokenResponse refreshToken(
+    public AuthResponse refreshToken(
             HttpServletRequest request
     ) {
         Cookie[] cookies = request.getCookies();
@@ -80,8 +79,10 @@ public class AuthService {
             throw new InvalidTokenException("Refresh token is not valid");
         }
 
+        // the refresh token is renewed too, so the login lasts as long as the app is used
         String accessToken = jwtService.generateToken(user.getUsername());
+        String newRefreshToken = jwtService.generateRefreshToken(user.getUsername());
 
-        return new TokenResponse(accessToken);
+        return new AuthResponse(accessToken, jwtService.createCookie(newRefreshToken));
     }
 }

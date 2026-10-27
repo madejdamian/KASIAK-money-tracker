@@ -39,9 +39,13 @@ public class AuthController {
     )
     @PostMapping("/refresh-token")
     public ResponseEntity<TokenResponse> refreshToken(
-            HttpServletRequest request
+            HttpServletRequest request,
+            HttpServletResponse response
     ) {
-        return ResponseEntity.ok(authService.refreshToken(request));
+        AuthResponse authResponse = authService.refreshToken(request);
+        response.addCookie(authResponse.getCookie());
+
+        return ResponseEntity.ok(new TokenResponse(authResponse.getToken()));
     }
 
 }

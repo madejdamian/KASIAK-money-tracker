@@ -13,3 +13,12 @@ ReactDOM.createRoot(document.getElementById("root")).render(
     </QueryClientProvider>
   </React.StrictMode>
 );
+
+// The service worker only runs in the production build (it would get in the way of the dev server).
+if ("serviceWorker" in navigator && import.meta.env.PROD) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/sw.js").catch(() => {
+      // the app works without it, just not offline
+    });
+  });
+}

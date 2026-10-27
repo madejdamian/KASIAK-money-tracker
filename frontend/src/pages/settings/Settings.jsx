@@ -5,18 +5,21 @@ import {
   Card,
   ErrorText,
   PageHeader,
+  primaryButtonClass,
   secondaryButtonClass,
 } from "../../components/ui/ui";
 import { fetchCategoryTree } from "../../http/categories";
 import { fetchMembers } from "../../http/members";
 import { logout } from "../../http/auth";
 import { flattenCategories } from "../../util/format";
+import { useInstallPrompt } from "../../util/useInstallPrompt";
 import MembersSection from "./MembersSection";
 import CategoriesSection from "./CategoriesSection";
 
 const Settings = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { installed, canInstall, showIosHint, install } = useInstallPrompt();
 
   const membersQuery = useQuery({ queryKey: ["members"], queryFn: fetchMembers });
   const categoriesQuery = useQuery({
@@ -36,6 +39,29 @@ const Settings = () => {
 
       <div className="px-4 flex flex-col gap-4 mt-2">
         <ErrorText>{membersQuery.error ?? categoriesQuery.error}</ErrorText>
+
+        <Card>
+          <h2 className="font-semibold mb-2">Aplikacja na telefonie</h2>
+          {installed && (
+            <p className="text-neutral-400">Aplikacja jest zainstalowana na tym urządzeniu.</p>
+          )}
+          {canInstall && (
+            <button type="button" onClick={install} className={primaryButtonClass}>
+              Zainstaluj aplikację
+            </button>
+          )}
+          {showIosHint && (
+            <p className="text-neutral-300">
+              Na iPhonie: dotknij przycisku Udostępnij w Safari i wybierz „Do ekranu początkowego”.
+            </p>
+          )}
+          {!installed && !canInstall && !showIosHint && (
+            <p className="text-neutral-400">
+              Otwórz aplikację w przeglądarce telefonu (przez HTTPS) i wybierz „Zainstaluj
+              aplikację” lub „Dodaj do ekranu głównego” w menu przeglądarki.
+            </p>
+          )}
+        </Card>
 
         <Card>
           <h2 className="font-semibold mb-2">Automatyzacja</h2>

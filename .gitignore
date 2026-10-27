@@ -1,3 +1,5 @@
 .idea
 .vscode
+# secrets of the production stack live only on the server
+deploy/.env
 uploads

@@ -50,6 +50,16 @@ public class GlobalExceptionHandler {
         );
     }
 
+    @ResponseStatus(HttpStatus.TOO_MANY_REQUESTS)
+    @ExceptionHandler(TooManyAttemptsException.class)
+    public ApiResponse handleTooManyAttemptsException(TooManyAttemptsException e) {
+        return new ApiResponse(
+                HttpStatus.TOO_MANY_REQUESTS,
+                HttpStatus.TOO_MANY_REQUESTS.value(),
+                Collections.singletonMap(e.getFieldName(), e.getMessage())
+        );
+    }
+
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     @ExceptionHandler(InvalidUsernameException.class)
     public ApiResponse handleInvalidUsernameException(InvalidUsernameException e) {

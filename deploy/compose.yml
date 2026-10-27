@@ -1,0 +1,74 @@
+# Production stack for the VPS. Only Caddy publishes ports (80 and 443): it gets the HTTPS
+# certificate for KASIAK_HOST by itself and forwards everything to the app. The app and the
+# database stay on the internal network and have no ports on the host.
+#
+# On the server this folder is used as it is (copy compose.yml, Caddyfile, backup.sh, and create .env
+# from .env.example). The image comes from GitHub (workflow "Publish image").
+services:
+  caddy:
+    image: caddy:2-alpine
+    container_name: kasiak-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      KASIAK_HOST: ${KASIAK_HOST}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - app
+    networks:
+      - internal
+    mem_limit: 96m
+
+  db:
+    image: postgres:16-alpine
+    container_name: kasiak-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - kasiak_pg:/var/lib/postgresql/data
+    networks:
+      - internal
+    mem_limit: 256m
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    image: ghcr.io/madejdamian/kasiak:latest
+    container_name: kasiak-app
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      DB_DRIVER: org.postgresql.Driver
+      DB_HOST: db
+      DB_PORT: "5432"
+      DDL_AUTO: none
+      HIBERNATE_DIALECT: org.hibernate.dialect.PostgreSQLDialect
+      SHOW_SQL: "false"
+      # the server is small and shared with another app: keep the heap modest
+      JAVA_TOOL_OPTIONS: -Xmx320m -Xss512k
+    networks:
+      - internal
+    mem_limit: 640m
+
+volumes:
+  kasiak_pg:
+  caddy_data:
+  caddy_config:
+
+networks:
+  internal:

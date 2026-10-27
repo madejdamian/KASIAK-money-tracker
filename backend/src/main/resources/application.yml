@@ -1,3 +1,6 @@
+server:
+  # behind the reverse proxy: take the client address and https from the forwarded headers
+  forward-headers-strategy: framework
 spring:
   mvc:
     contentnegotiation:

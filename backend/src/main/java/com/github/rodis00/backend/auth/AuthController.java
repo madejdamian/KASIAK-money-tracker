@@ -1,6 +1,7 @@
 package com.github.rodis00.backend.auth;
 
 import com.github.rodis00.backend.config.jwt.TokenResponse;
+import com.github.rodis00.backend.exception.InvalidPasswordException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -15,9 +16,11 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthService authService;
+    private final LoginAttemptLimiter loginAttemptLimiter;
 
-    public AuthController(AuthService authService) {
+    public AuthController(AuthService authService, LoginAttemptLimiter loginAttemptLimiter) {
         this.authService = authService;
+        this.loginAttemptLimiter = loginAttemptLimiter;
     }
 
     @Operation(
@@ -26,9 +29,21 @@ public class AuthController {
     @PostMapping("/authenticate")
     public ResponseEntity<TokenResponse> authenticate(
             @RequestBody @Valid AuthRequest request,
+            HttpServletRequest httpRequest,
             HttpServletResponse response
     ) {
-        AuthResponse authResponse = authService.authenticate(request);
+        // behind the reverse proxy this is the real client address (forward headers are enabled)
+        String client = httpRequest.getRemoteAddr();
+        loginAttemptLimiter.checkAllowed(client);
+
+        AuthResponse authResponse;
+        try {
+            authResponse = authService.authenticate(request);
+        } catch (InvalidPasswordException e) {
+            loginAttemptLimiter.recordFailure(client);
+            throw e;
+        }
+        loginAttemptLimiter.reset(client);
         response.addCookie(authResponse.getCookie());
 
         return ResponseEntity.ok(new TokenResponse(authResponse.getToken()));

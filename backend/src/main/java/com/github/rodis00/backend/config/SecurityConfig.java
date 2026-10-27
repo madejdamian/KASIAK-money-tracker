@@ -66,7 +66,9 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(WHITE_LIST).permitAll()
-                        .anyRequest().authenticated()
+                        .requestMatchers("/expense-tracker/api/**").authenticated()
+                        // everything else is the public frontend files
+                        .anyRequest().permitAll()
                 )
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint(customAuthenticationEntryPoint)

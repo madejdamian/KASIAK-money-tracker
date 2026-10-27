@@ -90,7 +90,10 @@ public class ExpenseTemplateService {
                 .usageAmount(changes != null && changes.getUsageAmount() != null
                         ? changes.getUsageAmount()
                         : template.getUsageAmount())
-                .description(template.getDescription())
+                .description(changes != null && changes.getDescription() != null
+                        && !changes.getDescription().isBlank()
+                        ? changes.getDescription().trim()
+                        : template.getDescription())
                 .build();
 
         return expenseService.saveExpense(expense, username);

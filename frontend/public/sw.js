@@ -1,6 +1,6 @@
 // Service worker: keeps the app shell available offline and speeds up start-up.
-// API calls go to another origin and are never cached, so data is always fresh.
-const VERSION = "v1";
+// API calls (and Swagger) are never cached, so data is always fresh.
+const VERSION = "v2";
 const SHELL_CACHE = `shell-${VERSION}`;
 const ASSET_CACHE = `assets-${VERSION}`;
 const SHELL = [
@@ -39,7 +39,13 @@ self.addEventListener("fetch", (event) => {
   const request = event.request;
   const url = new URL(request.url);
 
-  if (request.method !== "GET" || url.origin !== self.location.origin) {
+  // the API is served from the same origin as the app, so it has to be skipped by path
+  const isBackendPath =
+    url.pathname.startsWith("/expense-tracker/") ||
+    url.pathname.startsWith("/swagger-ui") ||
+    url.pathname.startsWith("/v3/");
+
+  if (request.method !== "GET" || url.origin !== self.location.origin || isBackendPath) {
     return;
   }
 

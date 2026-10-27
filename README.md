@@ -25,22 +25,22 @@ Wymagania, ustalenia i stan prac: [`REQUIREMENTS.md`](REQUIREMENTS.md).
 ## Uruchomienie
 
 1. Skopiuj `backend/.env.example` do `backend/.env-dev` i ustaw co najmniej `JWT_SECRET_KEY`
-   (np. `openssl rand -base64 32`) oraz `APP_USERNAME` i `APP_PASSWORD`, czyli dane logowania
-   jedynego konta (są ustawiane przy każdym starcie backendu).
+   (np. `openssl rand -base64 32`) oraz `APP_PASSWORD`, czyli hasło
+   jedynego konta (logowanie tylko hasłem; ustawiane przy każdym starcie backendu).
 2. `docker compose up --build`
-3. Aplikacja: http://localhost:5173, dokumentacja API (Swagger): http://localhost:8080
+3. Aplikacja: http://localhost:8080, dokumentacja API (Swagger): http://localhost:8080/swagger-ui.html
 
-Frontend w kontenerze jest zbudowany produkcyjnie. Do pracy nad kodem: `cd frontend && npm install
-&& npm run dev` (service worker działa tylko w buildzie produkcyjnym). Testy: `cd frontend && npm test`
-oraz `cd backend && ./mvnw test`.
+Aplikacja to jeden kontener (`app`: backend Spring Boot serwuje też zbudowany frontend) oraz kontener
+bazy (`db`). Frontend jest tam zbudowany produkcyjnie. Do pracy nad kodem: `cd frontend && npm install
+&& npm run dev` (adres http://localhost:5173, service worker działa tylko w buildzie produkcyjnym).
+Testy: `cd frontend && npm test` oraz `cd backend && ./mvnw test` (wymaga JDK 17).
 
 ## Instalacja na telefonie (PWA)
 
 Przeglądarka pozwala zainstalować aplikację tylko przez **HTTPS** (wyjątkiem jest `localhost`).
-Do codziennego użytku postaw ją za reverse proxy z certyfikatem (np. Caddy lub nginx) i, jeśli
-się da, serwuj frontend i API pod tą samą domeną (np. `/` i `/expense-tracker/api`), a przy budowaniu
-frontendu ustaw `VITE_API_URL` na adres API widoczny z przeglądarki oraz `FRONTEND_PORT` w backendzie
-na adres frontendu (CORS).
+Do codziennego użytku postaw ją za reverse proxy z certyfikatem (np. Caddy lub nginx) kierującym
+cały ruch na port 8080 kontenera `app`. Frontend i API są już pod jedną domeną, więc nic więcej
+nie trzeba ustawiać (CORS dotyczy tylko pracy z `npm run dev`).
 
 - Android (Chrome): Ustawienia w aplikacji › „Zainstaluj aplikację” albo menu przeglądarki.
 - iPhone (Safari): Udostępnij › „Do ekranu początkowego”.

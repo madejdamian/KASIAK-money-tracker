@@ -8,10 +8,10 @@ const BarRow = ({ label, value, ratio, hint, onClick, tone = "default" }) => {
         <span className="min-w-0 break-words text-left">{label}</span>
         <span className="tabular-nums whitespace-nowrap">{value}</span>
       </div>
-      <div className="h-2 mt-2 rounded-full bg-neutral-800 overflow-hidden">
+      <div className="h-2.5 mt-2 rounded-full bg-neutral-800 overflow-hidden">
         <div
           className={`h-full rounded-full ${
-            tone === "muted" ? "bg-neutral-600" : "bg-secondColor"
+            tone === "muted" ? "bg-neutral-600" : "bg-brand"
           }`}
           style={{ width: `${Math.max(0, Math.min(1, ratio)) * 100}%` }}
         />
@@ -28,7 +28,7 @@ const BarRow = ({ label, value, ratio, hint, onClick, tone = "default" }) => {
     <button
       type="button"
       onClick={onClick}
-      className="block w-full py-2 text-left active:bg-neutral-800 rounded-lg"
+      className="block w-full py-2 px-2 -mx-2 text-left rounded-lg transition-colors hover:bg-neutral-800/60 active:bg-neutral-800"
     >
       {content}
     </button>

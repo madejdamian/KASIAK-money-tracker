@@ -8,7 +8,7 @@ const ErrorBoundary = () => {
   const notFound = error?.status === 404;
 
   return (
-    <div className="min-h-screen bg-main text-white flex flex-col items-center justify-center gap-6 px-4 text-center">
+    <div className="min-h-screen bg-ink text-neutral-50 flex flex-col items-center justify-center gap-6 px-4 text-center">
       <span className="text-4xl font-semibold">{notFound ? "404" : "Błąd"}</span>
       <p className="text-neutral-300">
         {notFound ? "Nie znaleziono strony." : "Coś poszło nie tak."}
@@ -18,7 +18,7 @@ const ErrorBoundary = () => {
         className="h-12 px-6 rounded-xl bg-neutral-800 hover:bg-neutral-700"
         onClick={() => navigate("/")}
       >
-        Wróć do budżetu
+        Wróć na stronę główną
       </button>
     </div>
   );

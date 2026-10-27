@@ -5,6 +5,7 @@ import com.github.rodis00.backend.exception.EntityNotFoundException;
 import com.github.rodis00.backend.exception.InvalidRequestException;
 import com.github.rodis00.backend.expense.ExpenseRepository;
 import com.github.rodis00.backend.income.IncomeRepository;
+import com.github.rodis00.backend.recurring.RecurringDepositRepository;
 import com.github.rodis00.backend.recurring.RecurringExpenseRepository;
 import com.github.rodis00.backend.template.ExpenseTemplateRepository;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,7 @@ public class MemberService {
     private final ExpenseRepository expenseRepository;
     private final IncomeRepository incomeRepository;
     private final RecurringExpenseRepository recurringRepository;
+    private final RecurringDepositRepository recurringDepositRepository;
     private final ExpenseTemplateRepository templateRepository;
 
     public MemberService(
@@ -25,12 +27,14 @@ public class MemberService {
             ExpenseRepository expenseRepository,
             IncomeRepository incomeRepository,
             RecurringExpenseRepository recurringRepository,
+            RecurringDepositRepository recurringDepositRepository,
             ExpenseTemplateRepository templateRepository
     ) {
         this.memberRepository = memberRepository;
         this.expenseRepository = expenseRepository;
         this.incomeRepository = incomeRepository;
         this.recurringRepository = recurringRepository;
+        this.recurringDepositRepository = recurringDepositRepository;
         this.templateRepository = templateRepository;
     }
 
@@ -76,8 +80,10 @@ public class MemberService {
         if (expenseRepository.existsByMemberId(id) || incomeRepository.existsByMemberId(id)) {
             throw new InvalidRequestException("Member has expenses or deposits and cannot be deleted.");
         }
-        if (recurringRepository.existsByMemberId(id) || templateRepository.existsByMemberId(id)) {
-            throw new InvalidRequestException("Member is used by a recurring expense or template and cannot be deleted.");
+        if (recurringRepository.existsByMemberId(id)
+                || recurringDepositRepository.existsByMemberId(id)
+                || templateRepository.existsByMemberId(id)) {
+            throw new InvalidRequestException("Member is used by a recurring expense or deposit, or a template, and cannot be deleted.");
         }
 
         memberRepository.delete(member);

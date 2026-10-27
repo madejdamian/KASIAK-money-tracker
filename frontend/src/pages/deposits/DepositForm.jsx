@@ -112,7 +112,7 @@ const DepositEditor = ({ deposit, members }) => {
   const busy = save.isPending || remove.isPending;
 
   return (
-    <form onSubmit={handleSubmit} className="px-4 pb-4 flex flex-col gap-5">
+    <form onSubmit={handleSubmit} className="px-4 pb-4 flex flex-col gap-5 lg:max-w-3xl">
       <Field label="Kwota (zł)" htmlFor="amount">
         <input
           id="amount"
@@ -229,7 +229,7 @@ const DepositForm = () => {
       {needsSetup && (
         <p className="px-4 text-neutral-300">
           Najpierw dodaj domowników w{" "}
-          <Link to="/settings" className="text-secondColor underline">
+          <Link to="/settings" className="text-brand underline">
             ustawieniach
           </Link>
           .

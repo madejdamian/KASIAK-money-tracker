@@ -20,4 +20,7 @@ public class UseTemplateRequest {
 
     @PositiveOrZero(message = "Usage can't be negative.")
     private BigDecimal usageAmount;
+
+    // replaces the description of the template when not blank
+    private String description;
 }

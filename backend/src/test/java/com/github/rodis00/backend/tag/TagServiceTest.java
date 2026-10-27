@@ -42,6 +42,26 @@ class TagServiceTest {
     }
 
     @Test
+    void shouldNotDeleteTagUsedByExpenses() {
+        when(tagRepository.findByName("wakacje")).thenReturn(Optional.of(TagEntity.builder().name("wakacje").build()));
+        when(expenseRepository.existsByTagsName("wakacje")).thenReturn(true);
+
+        assertThrows(InvalidRequestException.class, () -> tagService.deleteTag("Wakacje"));
+        verify(tagRepository, never()).delete(any());
+    }
+
+    @Test
+    void shouldDeleteUnusedTag() {
+        TagEntity tag = TagEntity.builder().name("remont").build();
+        when(tagRepository.findByName("remont")).thenReturn(Optional.of(tag));
+        when(expenseRepository.existsByTagsName("remont")).thenReturn(false);
+
+        tagService.deleteTag("#Remont");
+
+        verify(tagRepository).delete(tag);
+    }
+
+    @Test
     void shouldReturnNoNamesForNull() {
         assertTrue(TagService.normalize(null).isEmpty());
     }

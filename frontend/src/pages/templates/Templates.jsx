@@ -19,7 +19,7 @@ const Templates = () => {
         </Link>
       </PageHeader>
 
-      <div className="px-4 mt-2">
+      <div className="px-4 mt-2 lg:max-w-4xl">
         <p className="text-sm text-neutral-400 mb-3">
           Szablony pojawiają się na liście wydatków jako przyciski szybkiego dodawania.
         </p>
@@ -37,7 +37,7 @@ const Templates = () => {
             <li key={template.id}>
               <Link
                 to={`/templates/${template.id}`}
-                className="block bg-thirdColor rounded-2xl p-4 active:bg-neutral-800"
+                className="block bg-surface rounded-2xl p-4 active:bg-neutral-800"
               >
                 <div className="flex items-start justify-between gap-3">
                   <span className="font-semibold break-words min-w-0">{template.name}</span>

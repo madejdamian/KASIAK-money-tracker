@@ -4,17 +4,24 @@ import { formatDelta, formatMoney, formatPercent } from "../../util/format";
 
 // For spending, a rise is bad (red) and a fall is good (green).
 const toneOf = (diff) =>
-  diff > 0 ? "text-red-400" : diff < 0 ? "text-emerald-400" : "text-neutral-400";
+  diff > 0 ? "text-danger" : diff < 0 ? "text-brand" : "text-neutral-400";
 
-export const DeltaLine = ({ label, current, previous }) => {
+// `format` / `formatDiff` default to money; usage passes its own (e.g. kWh)
+export const DeltaLine = ({
+  label,
+  current,
+  previous,
+  format = formatMoney,
+  formatDiff = formatDelta,
+}) => {
   const result = compare(current, previous);
   return (
     <div className="flex items-baseline justify-between gap-3 py-1">
       <span className="text-neutral-300">{label}</span>
       <span className="text-right tabular-nums">
-        <span className="text-neutral-500 mr-2">{formatMoney(previous)}</span>
+        <span className="text-neutral-500 mr-2">{format(previous)}</span>
         <span className={toneOf(result.diff)}>
-          {formatDelta(result.diff)} ({formatPercent(result.pct)})
+          {formatDiff(result.diff)} ({formatPercent(result.pct)})
         </span>
       </span>
     </div>

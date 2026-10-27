@@ -31,6 +31,8 @@ public interface ExpenseRepository extends JpaRepository<ExpenseEntity, Long> {
     @Query("select distinct t.name from ExpenseEntity e join e.tags t order by t.name")
     List<String> findUsedTagNames();
 
+    boolean existsByTagsName(String name);
+
     boolean existsByCategoryId(Long categoryId);
 
     boolean existsByMemberId(Long memberId);

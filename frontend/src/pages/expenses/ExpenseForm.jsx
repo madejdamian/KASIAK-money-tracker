@@ -23,6 +23,7 @@ import {
 } from "../../http/expenses";
 import {
   flattenCategories,
+  formatDay,
   fromApiDateTime,
   recallChoice,
   rememberChoice,
@@ -30,8 +31,8 @@ import {
 } from "../../util/format";
 
 const cardOptions = [
-  { value: "SHARED_CARD", label: "Karta wspólna" },
-  { value: "PRIVATE_CARD", label: "Karta prywatna" },
+  { value: "SHARED_CARD", label: "Wspólna" },
+  { value: "PRIVATE_CARD", label: "Prywatna" },
 ];
 
 // `source` is the expense being edited, or one being copied (then the date starts as now)
@@ -39,7 +40,6 @@ function initialForm(source, categories, members, keepDate) {
   if (source) {
     const expense = source;
     return {
-      title: expense.title,
       price: String(expense.price),
       date: keepDate ? fromApiDateTime(expense.date) : toInputDateTime(),
       categoryId: expense.categoryId == null ? "" : String(expense.categoryId),
@@ -47,7 +47,7 @@ function initialForm(source, categories, members, keepDate) {
       paymentSource: expense.paymentSource ?? "SHARED_CARD",
       usageAmount: expense.usageAmount == null ? "" : String(expense.usageAmount),
       description: expense.description ?? "",
-      tags: (expense.tags ?? []).join(", "),
+      tags: expense.tags ?? [],
     };
   }
 
@@ -55,7 +55,6 @@ function initialForm(source, categories, members, keepDate) {
   const lastCategory = recallChoice("categoryId");
   const lastMember = recallChoice("memberId");
   return {
-    title: "",
     price: "",
     date: toInputDateTime(),
     categoryId: categories.some((c) => String(c.id) === lastCategory) ? lastCategory : "",
@@ -65,9 +64,66 @@ function initialForm(source, categories, members, keepDate) {
     paymentSource: recallChoice("paymentSource") || "SHARED_CARD",
     usageAmount: "",
     description: "",
-    tags: "",
+    tags: [],
   };
 }
+
+const tileClass = (selected) =>
+  `min-h-14 px-5 py-2 rounded-2xl text-base font-bold transition-colors ${
+    selected
+      ? "bg-brand text-on-brand"
+      : "bg-neutral-800 text-neutral-100 hover:bg-neutral-700"
+  }`;
+
+const FieldLabel = ({ children }) => (
+  <p className="text-sm font-medium text-neutral-400 mb-2">{children}</p>
+);
+
+// Category tiles, level by level: the main categories first; once a category with
+// subcategories is chosen, its subcategories show up below, and so on down the tree.
+const CategoryTiles = ({ categories, selectedId, onSelect }) => {
+  const byId = useMemo(() => new Map(categories.map((c) => [String(c.id), c])), [categories]);
+
+  // ids from the main category down to the chosen one
+  const chain = [];
+  for (let current = byId.get(selectedId); current; current = byId.get(String(current.parentId))) {
+    chain.unshift(String(current.id));
+  }
+
+  const childrenOf = (parentId) =>
+    categories.filter((c) => (c.parentId == null ? null : String(c.parentId)) === parentId);
+
+  const levels = [{ parent: null, tiles: childrenOf(null) }];
+  for (const id of chain) {
+    const tiles = childrenOf(id);
+    if (tiles.length > 0) levels.push({ parent: byId.get(id), tiles });
+  }
+
+  return (
+    <div className="flex flex-col gap-4" role="group" aria-label="Kategoria">
+      {levels.map((level, depth) => (
+        <div key={level.parent?.id ?? "main"}>
+          {level.parent && (
+            <p className="text-sm text-neutral-400 mb-2">{level.parent.name}</p>
+          )}
+          <div className="flex flex-wrap gap-2">
+            {level.tiles.map((category) => (
+              <button
+                key={category.id}
+                type="button"
+                aria-pressed={chain[depth] === String(category.id)}
+                onClick={() => onSelect(String(category.id))}
+                className={tileClass(chain[depth] === String(category.id))}
+              >
+                {category.name}
+              </button>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
 
 const ExpenseEditor = ({ expense, prefill, categories, members, knownTags }) => {
   const navigate = useNavigate();
@@ -77,18 +133,37 @@ const ExpenseEditor = ({ expense, prefill, categories, members, knownTags }) => 
     initialForm(expense ?? prefill, categories, members, !!expense)
   );
   const [templateSaved, setTemplateSaved] = useState(false);
+  const [categoryMissing, setCategoryMissing] = useState(false);
+  // a new expense is dated now, so the date stays out of the way until it is needed
+  const [editDate, setEditDate] = useState(!isNew);
 
   const selectedCategory = categories.find((c) => String(c.id) === form.categoryId);
+  // an expense keeps the title it has; a new one (or one moved to another category) is named after its category
+  const title =
+    expense && String(expense.categoryId) === form.categoryId
+      ? expense.title
+      : selectedCategory?.name ?? "Wydatek";
 
   function update(field, value) {
     setForm((prev) => ({ ...prev, [field]: value }));
   }
 
-  function finish() {
+  function toggleTag(tag) {
+    setForm((prev) => ({
+      ...prev,
+      tags: prev.tags.includes(tag) ? prev.tags.filter((t) => t !== tag) : [...prev.tags, tag],
+    }));
+  }
+
+  function refreshData() {
     queryClient.invalidateQueries({ queryKey: ["expenses"] });
     queryClient.invalidateQueries({ queryKey: ["expense"] });
     queryClient.invalidateQueries({ queryKey: ["budget"] });
     queryClient.invalidateQueries({ queryKey: ["tags"] });
+  }
+
+  function finish() {
+    refreshData();
     navigate(`/expenses?month=${form.date.slice(0, 7)}`);
   }
 
@@ -99,7 +174,13 @@ const ExpenseEditor = ({ expense, prefill, categories, members, knownTags }) => 
       rememberChoice("categoryId", form.categoryId);
       rememberChoice("memberId", form.memberId);
       rememberChoice("paymentSource", form.paymentSource);
-      finish();
+      if (isNew) {
+        // back to the home screen, which shows what was added and the new balance
+        refreshData();
+        navigate("/", { state: { added: { title, price: Number(form.price) } } });
+      } else {
+        finish();
+      }
     },
   });
 
@@ -107,11 +188,6 @@ const ExpenseEditor = ({ expense, prefill, categories, members, knownTags }) => 
     mutationFn: () => deleteExpense(expense.slug),
     onSuccess: finish,
   });
-
-  const tagNames = form.tags
-    .split(",")
-    .map((tag) => tag.trim())
-    .filter(Boolean);
 
   const saveTemplate = useMutation({
     mutationFn: createTemplate,
@@ -121,8 +197,8 @@ const ExpenseEditor = ({ expense, prefill, categories, members, knownTags }) => 
   function handleSaveTemplate() {
     setTemplateSaved(false);
     saveTemplate.mutate({
-      name: form.title.trim() || selectedCategory?.name || "Szablon",
-      title: form.title.trim() || null,
+      name: selectedCategory?.name ?? "Szablon",
+      title: null,
       price: form.price === "" ? null : Number(form.price),
       categoryId: Number(form.categoryId),
       memberId: Number(form.memberId),
@@ -134,8 +210,12 @@ const ExpenseEditor = ({ expense, prefill, categories, members, knownTags }) => 
 
   function handleSubmit(event) {
     event.preventDefault();
+    if (!form.categoryId) {
+      setCategoryMissing(true);
+      return;
+    }
     save.mutate({
-      title: form.title.trim() || selectedCategory?.name || "Wydatek",
+      title,
       price: Number(form.price),
       date: form.date.length === 16 ? `${form.date}:00` : form.date,
       categoryId: Number(form.categoryId),
@@ -143,7 +223,7 @@ const ExpenseEditor = ({ expense, prefill, categories, members, knownTags }) => 
       paymentSource: form.paymentSource,
       usageAmount: form.usageAmount === "" ? null : Number(form.usageAmount),
       description: form.description.trim() || null,
-      tags: tagNames,
+      tags: form.tags,
     });
   }
 
@@ -154,41 +234,56 @@ const ExpenseEditor = ({ expense, prefill, categories, members, knownTags }) => 
   }
 
   const busy = save.isPending || remove.isPending;
+  const today = toInputDateTime().slice(0, 10);
+  const dateText = form.date.slice(0, 10) === today ? "dziś" : formatDay(form.date);
+  // tags to pick from: all that exist, plus any the edited expense already has
+  const tagChoices = [...new Set([...knownTags, ...form.tags])].sort();
 
   return (
-    <form onSubmit={handleSubmit} className="px-4 pb-4 flex flex-col gap-5">
-      <Field label="Kwota (zł)" htmlFor="price">
-        <input
-          id="price"
-          type="number"
-          inputMode="decimal"
-          step="0.01"
-          min="0.01"
-          required
-          autoFocus={isNew}
-          value={form.price}
-          onChange={(e) => update("price", e.target.value)}
-          className={`${inputClass} text-2xl h-14`}
-        />
-      </Field>
+    <form onSubmit={handleSubmit} className="px-4 pb-4 flex flex-col gap-6 lg:max-w-3xl">
+      <div>
+        <label htmlFor="price" className="block text-sm font-medium text-neutral-400 mb-1">
+          Kwota
+        </label>
+        <div className="flex items-baseline gap-3 border-b-2 border-neutral-700 pb-1 focus-within:border-brand">
+          <input
+            id="price"
+            type="number"
+            inputMode="decimal"
+            step="0.01"
+            min="0.01"
+            required
+            autoFocus={isNew}
+            placeholder="0,00"
+            value={form.price}
+            onChange={(e) => update("price", e.target.value)}
+            className="w-full min-w-0 bg-transparent text-5xl font-light tabular-nums outline-none placeholder-neutral-600"
+          />
+          <span className="text-2xl text-neutral-400">zł</span>
+        </div>
+      </div>
 
-      <Field label="Kategoria" htmlFor="category">
-        <select
-          id="category"
-          required
-          value={form.categoryId}
-          onChange={(e) => update("categoryId", e.target.value)}
-          className={inputClass}
-        >
-          <option value="" disabled>
-            Wybierz kategorię
-          </option>
-          {categories.map((category) => (
-            <option key={category.id} value={category.id}>
-              {category.label}
-            </option>
-          ))}
-        </select>
+      <div>
+        <FieldLabel>Kategoria</FieldLabel>
+        <CategoryTiles
+          categories={categories}
+          selectedId={form.categoryId}
+          onSelect={(id) => {
+            update("categoryId", id);
+            setCategoryMissing(false);
+          }}
+        />
+        {categoryMissing && <p role="alert" className="text-sm text-danger mt-3">Wybierz kategorię.</p>}
+      </div>
+
+      <Field label="Opis (opcjonalnie)" htmlFor="description">
+        <textarea
+          id="description"
+          rows={2}
+          value={form.description}
+          onChange={(e) => update("description", e.target.value)}
+          className={`${inputClass} h-auto py-3`}
+        />
       </Field>
 
       {selectedCategory?.unit && (
@@ -206,83 +301,84 @@ const ExpenseEditor = ({ expense, prefill, categories, members, knownTags }) => 
         </Field>
       )}
 
-      <Field label="Kto zapłacił" htmlFor="member">
-        <select
-          id="member"
-          required
-          value={form.memberId}
-          onChange={(e) => update("memberId", e.target.value)}
-          className={inputClass}
-        >
-          <option value="" disabled>
-            Wybierz domownika
-          </option>
-          {members.map((member) => (
-            <option key={member.id} value={member.id}>
-              {member.name}
-            </option>
-          ))}
-        </select>
-      </Field>
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+        <div>
+          <FieldLabel>Kto zapłacił</FieldLabel>
+          <Segmented
+            name="member"
+            value={form.memberId}
+            onChange={(value) => update("memberId", value)}
+            options={members.map((member) => ({ value: String(member.id), label: member.name }))}
+          />
+        </div>
+        <div>
+          <FieldLabel>Karta</FieldLabel>
+          <Segmented
+            name="paymentSource"
+            value={form.paymentSource}
+            onChange={(value) => update("paymentSource", value)}
+            options={cardOptions}
+          />
+        </div>
+      </div>
 
-      <Segmented
-        name="paymentSource"
-        value={form.paymentSource}
-        onChange={(value) => update("paymentSource", value)}
-        options={cardOptions}
-      />
+      {editDate ? (
+        <Field label="Data i godzina" htmlFor="date">
+          <input
+            id="date"
+            type="datetime-local"
+            required
+            value={form.date}
+            onChange={(e) => update("date", e.target.value)}
+            className={inputClass}
+          />
+        </Field>
+      ) : (
+        <p className="text-neutral-300">
+          Data:{" "}
+          <strong className="text-neutral-50">
+            {dateText}, {form.date.slice(11, 16)}
+          </strong>{" "}
+          <button type="button" className="text-brand underline" onClick={() => setEditDate(true)}>
+            zmień
+          </button>
+        </p>
+      )}
 
-      <Field label="Data i godzina" htmlFor="date">
-        <input
-          id="date"
-          type="datetime-local"
-          required
-          value={form.date}
-          onChange={(e) => update("date", e.target.value)}
-          className={inputClass}
-        />
-      </Field>
-
-      <Field label="Tytuł (opcjonalnie, domyślnie nazwa kategorii)" htmlFor="title">
-        <input
-          id="title"
-          type="text"
-          value={form.title}
-          onChange={(e) => update("title", e.target.value)}
-          className={inputClass}
-        />
-      </Field>
-
-      <Field label="Opis (opcjonalnie)" htmlFor="description">
-        <textarea
-          id="description"
-          rows={2}
-          value={form.description}
-          onChange={(e) => update("description", e.target.value)}
-          className={`${inputClass} h-auto py-3`}
-        />
-      </Field>
-
-      <Field label="Tagi (po przecinku, np. wakacje, remont)" htmlFor="tags">
-        <input
-          id="tags"
-          type="text"
-          list="known-tags"
-          autoCapitalize="none"
-          value={form.tags}
-          onChange={(e) => update("tags", e.target.value)}
-          className={inputClass}
-        />
-        <datalist id="known-tags">
-          {knownTags.map((tag) => (
-            <option key={tag} value={tag} />
-          ))}
-        </datalist>
-      </Field>
+      <div>
+        <FieldLabel>Tagi (opcjonalnie)</FieldLabel>
+        {tagChoices.length === 0 ? (
+          <p className="text-sm text-neutral-500">
+            Nie ma jeszcze tagów. Dodasz je w{" "}
+            <Link to="/settings" className="text-brand underline">
+              ustawieniach
+            </Link>
+            .
+          </p>
+        ) : (
+          <div className="flex flex-wrap gap-2" role="group" aria-label="Tagi">
+            {tagChoices.map((tag) => (
+              <button
+                key={tag}
+                type="button"
+                aria-pressed={form.tags.includes(tag)}
+                onClick={() => toggleTag(tag)}
+                className={`h-11 px-4 rounded-full text-sm font-bold transition-colors ${
+                  form.tags.includes(tag)
+                    ? "bg-brand text-on-brand"
+                    : "bg-neutral-800 text-neutral-100 hover:bg-neutral-700"
+                }`}
+              >
+                #{tag}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
 
       <ErrorText>{save.error ?? remove.error ?? saveTemplate.error}</ErrorText>
       {templateSaved && (
-        <p className="text-sm text-emerald-400">
+        <p className="text-sm text-brand">
           Zapisano szablon. Znajdziesz go w{" "}
           <Link to="/templates" className="underline">
             szablonach
@@ -291,10 +387,14 @@ const ExpenseEditor = ({ expense, prefill, categories, members, knownTags }) => 
         </p>
       )}
 
-      <div className="flex flex-col gap-3">
-        <button type="submit" disabled={busy} className={primaryButtonClass}>
-          {save.isPending ? "Zapisywanie..." : "Zapisz"}
+      {/* stays above the bottom bar and its raised middle button so saving is always one tap away */}
+      <div className="sticky bottom-[calc(88px+env(safe-area-inset-bottom))] z-30 -mx-4 px-4 py-3 bg-ink border-t border-neutral-800 lg:static lg:mx-0 lg:px-0 lg:border-0">
+        <button type="submit" disabled={busy} className={`${primaryButtonClass} w-full h-14 text-lg`}>
+          {save.isPending ? "Zapisywanie..." : isNew ? "Dodaj wydatek" : "Zapisz"}
         </button>
+      </div>
+
+      <div className="flex flex-col gap-3">
         <button
           type="button"
           disabled={busy || saveTemplate.isPending || !form.categoryId || !form.memberId}
@@ -304,20 +404,20 @@ const ExpenseEditor = ({ expense, prefill, categories, members, knownTags }) => 
           Zapisz jako szablon
         </button>
         {!isNew && (
-          <Link
-            to={`/expenses/new?copy=${expense.slug}`}
-            className={`${secondaryButtonClass} flex items-center justify-center`}
-          >
-            Kopiuj jako nowy
-          </Link>
-        )}
-        <Link to="/expenses" className={`${secondaryButtonClass} flex items-center justify-center`}>
-          Anuluj
-        </Link>
-        {!isNew && (
-          <button type="button" disabled={busy} onClick={handleDelete} className={dangerButtonClass}>
-            Usuń wydatek
-          </button>
+          <>
+            <Link
+              to={`/expenses/new?copy=${expense.slug}`}
+              className={`${secondaryButtonClass} flex items-center justify-center`}
+            >
+              Kopiuj jako nowy
+            </Link>
+            <Link to="/expenses" className={`${secondaryButtonClass} flex items-center justify-center`}>
+              Anuluj
+            </Link>
+            <button type="button" disabled={busy} onClick={handleDelete} className={dangerButtonClass}>
+              Usuń wydatek
+            </button>
+          </>
         )}
       </div>
     </form>
@@ -356,6 +456,7 @@ const ExpenseForm = () => {
   const ready =
     categoriesQuery.data &&
     membersQuery.data &&
+    tagsQuery.data &&
     (isNew || expenseQuery.data) &&
     (!copySlug || copyQuery.data);
   const needsSetup = ready && (categories.length === 0 || members.length === 0);
@@ -369,7 +470,7 @@ const ExpenseForm = () => {
       {needsSetup && (
         <p className="px-4 text-neutral-300">
           Najpierw dodaj domowników i kategorie w{" "}
-          <Link to="/settings" className="text-secondColor underline">
+          <Link to="/settings" className="text-brand underline">
             ustawieniach
           </Link>
           .
@@ -383,7 +484,7 @@ const ExpenseForm = () => {
           prefill={copySlug ? copyQuery.data : null}
           categories={categories}
           members={members}
-          knownTags={tagsQuery.data ?? []}
+          knownTags={tagsQuery.data}
         />
       )}
     </>

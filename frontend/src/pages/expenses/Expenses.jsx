@@ -1,19 +1,17 @@
 import React, { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import MonthSwitcher from "../../components/ui/MonthSwitcher";
 import {
   ErrorText,
   PageHeader,
   inputClass,
-  primaryButtonClass,
   secondaryButtonClass,
 } from "../../components/ui/ui";
 import { fetchCategoryTree } from "../../http/categories";
-import { deleteExpense, fetchExpenses } from "../../http/expenses";
+import { fetchExpenses } from "../../http/expenses";
 import { fetchMembers } from "../../http/members";
 import { fetchTags } from "../../http/tags";
-import { fetchTemplates, applyTemplate } from "../../http/templates";
 import { buildCategoryIndex } from "../../util/analysis";
 import { applyExpenseFilters, emptyFilters, hasActiveFilters } from "../../util/filters";
 import {
@@ -30,9 +28,7 @@ const cardLabel = {
 };
 
 const Expenses = () => {
-  const queryClient = useQueryClient();
   const [month, setMonth] = useMonthParam();
-  const [added, setAdded] = useState(null);
   const [filters, setFilters] = useState(emptyFilters);
   const [showFilters, setShowFilters] = useState(false);
 
@@ -43,42 +39,6 @@ const Expenses = () => {
   const categoriesQuery = useQuery({ queryKey: ["categories"], queryFn: fetchCategoryTree });
   const membersQuery = useQuery({ queryKey: ["members"], queryFn: fetchMembers });
   const tagsQuery = useQuery({ queryKey: ["tags"], queryFn: fetchTags });
-  const templatesQuery = useQuery({ queryKey: ["templates"], queryFn: fetchTemplates });
-
-  function refreshAfterChange() {
-    queryClient.invalidateQueries({ queryKey: ["expenses"] });
-    queryClient.invalidateQueries({ queryKey: ["budget"] });
-  }
-
-  // one tap adds an expense dated now; it can be undone right away
-  const quickAdd = useMutation({
-    mutationFn: applyTemplate,
-    onSuccess: (expense) => {
-      setAdded(expense);
-      refreshAfterChange();
-    },
-  });
-
-  const undo = useMutation({
-    mutationFn: (slug) => deleteExpense(slug),
-    onSuccess: () => {
-      setAdded(null);
-      refreshAfterChange();
-    },
-  });
-
-  function handleQuickAdd(template) {
-    setAdded(null);
-    if (template.price != null) {
-      quickAdd.mutate({ id: template.id });
-      return;
-    }
-    const answer = window.prompt(`Kwota dla „${template.name}” (zł):`);
-    const price = Number((answer ?? "").replace(",", "."));
-    if (answer !== null && price > 0) {
-      quickAdd.mutate({ id: template.id, changes: { price } });
-    }
-  }
 
   const categories = useMemo(
     () => flattenCategories(categoriesQuery.data ?? []),
@@ -98,61 +58,23 @@ const Expenses = () => {
 
   return (
     <>
-      <PageHeader title="Wydatki">
-        <Link to="/expenses/new" className={`${primaryButtonClass} flex items-center`}>
-          + Dodaj
-        </Link>
-      </PageHeader>
+      <PageHeader title="Wydatki" />
       <MonthSwitcher value={month} onChange={setMonth} />
 
       <div className="px-4 mt-2">
-        {(templatesQuery.data ?? []).length > 0 && (
-          <div className="mb-4">
-            <p className="text-sm text-neutral-400 mb-2">Szybkie dodawanie</p>
-            <div className="flex flex-wrap gap-2">
-              {templatesQuery.data.map((template) => (
-                <button
-                  key={template.id}
-                  type="button"
-                  disabled={quickAdd.isPending}
-                  onClick={() => handleQuickAdd(template)}
-                  className="h-11 px-4 rounded-full bg-thirdColor border border-neutral-700 text-sm active:bg-neutral-800 disabled:opacity-60"
-                >
-                  {template.name}
-                  {template.price != null && ` · ${formatMoney(template.price)}`}
-                </button>
-              ))}
-            </div>
-            {added && (
-              <p className="text-sm text-emerald-400 mt-2">
-                Dodano: {added.title}, {formatMoney(added.price)}.{" "}
-                <button
-                  type="button"
-                  className="underline"
-                  disabled={undo.isPending}
-                  onClick={() => undo.mutate(added.slug)}
-                >
-                  Cofnij
-                </button>
-              </p>
-            )}
-            <ErrorText>{quickAdd.error ?? undo.error}</ErrorText>
-          </div>
-        )}
-
-        <div className="flex gap-4 text-sm mb-4">
-          <Link to="/recurring" className="text-secondColor underline">
+        <div className="flex gap-4 text-sm mb-4 lg:hidden">
+          <Link to="/recurring" className="text-brand underline">
             Cykliczne
           </Link>
-          <Link to="/templates" className="text-secondColor underline">
+          <Link to="/templates" className="text-brand underline">
             Szablony
           </Link>
-          <Link to="/tags" className="text-secondColor underline">
+          <Link to="/tags" className="text-brand underline">
             Tagi
           </Link>
         </div>
 
-        <div className="flex gap-2 mb-3">
+        <div className="flex gap-2 mb-3 lg:max-w-xl">
           <input
             type="search"
             aria-label="Szukaj"
@@ -164,14 +86,14 @@ const Expenses = () => {
           <button
             type="button"
             onClick={() => setShowFilters((prev) => !prev)}
-            className={`${secondaryButtonClass} px-4 shrink-0 ${filtered ? "outline outline-2 outline-secondColor" : ""}`}
+            className={`${secondaryButtonClass} px-4 shrink-0 ${filtered ? "outline outline-2 outline-brand" : ""}`}
           >
             Filtry
           </button>
         </div>
 
         {showFilters && (
-          <div className="bg-thirdColor rounded-2xl p-4 mb-3 flex flex-col gap-3">
+          <div className="bg-surface rounded-2xl p-4 mb-3 flex flex-col gap-3 lg:grid lg:grid-cols-6 lg:items-center">
             <select
               aria-label="Kategoria"
               value={filters.categoryId}
@@ -225,7 +147,7 @@ const Expenses = () => {
               <option value="PRIVATE_CARD">Karta prywatna</option>
             </select>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3 lg:col-span-2">
               <input
                 type="number"
                 inputMode="decimal"
@@ -252,7 +174,7 @@ const Expenses = () => {
               <button
                 type="button"
                 onClick={() => setFilters(emptyFilters)}
-                className={secondaryButtonClass}
+                className={`${secondaryButtonClass} lg:col-span-6 lg:justify-self-start`}
               >
                 Wyczyść filtry
               </button>
@@ -275,28 +197,41 @@ const Expenses = () => {
             <li key={expense.slug}>
               <Link
                 to={`/expenses/${expense.slug}`}
-                className="block bg-thirdColor rounded-2xl p-4 active:bg-neutral-800"
+                className="block bg-surface rounded-2xl p-4 transition-colors hover:bg-neutral-900 active:bg-neutral-800 lg:grid lg:grid-cols-[7rem_1fr_24rem_10rem] lg:items-center lg:gap-6 lg:py-3.5"
               >
-                <div className="flex items-start justify-between gap-3">
-                  <span className="font-semibold break-words min-w-0">{expense.title}</span>
-                  <span className="font-semibold tabular-nums whitespace-nowrap">
-                    {formatMoney(expense.price)}
-                  </span>
-                </div>
-                <p className="text-sm text-neutral-400 mt-1">
-                  {expense.categoryPath.join(" › ") || "Bez kategorii"}
+                <p className="hidden lg:block text-sm text-neutral-400">
+                  {formatDay(expense.date)}
                 </p>
-                <p className="text-sm text-neutral-500 mt-1">
-                  {formatDay(expense.date)} · {expense.memberName ?? "?"} · karta{" "}
-                  {cardLabel[expense.paymentSource] ?? "?"}
-                  {expense.usageAmount != null &&
-                    ` · ${formatUsage(expense.usageAmount, expense.unit)}`}
-                </p>
-                {expense.tags?.length > 0 && (
-                  <p className="text-xs text-secondColor mt-1">
-                    {expense.tags.map((tag) => `#${tag}`).join(" ")}
+                <div className="min-w-0">
+                  <div className="flex items-start justify-between gap-3">
+                    <span className="font-semibold break-words min-w-0">{expense.title}</span>
+                    <span className="font-semibold tabular-nums whitespace-nowrap lg:hidden">
+                      {formatMoney(expense.price)}
+                    </span>
+                  </div>
+                  <p className="text-sm text-neutral-400 mt-1">
+                    {expense.categoryPath.join(" › ") || "Bez kategorii"}
                   </p>
-                )}
+                  {expense.description && (
+                    <p className="text-sm text-neutral-200 mt-1 break-words">{expense.description}</p>
+                  )}
+                </div>
+                <div>
+                  <p className="text-sm text-neutral-500 mt-1 lg:mt-0">
+                    <span className="lg:hidden">{formatDay(expense.date)} · </span>
+                    {expense.memberName ?? "?"} · karta {cardLabel[expense.paymentSource] ?? "?"}
+                    {expense.usageAmount != null &&
+                      ` · ${formatUsage(expense.usageAmount, expense.unit)}`}
+                  </p>
+                  {expense.tags?.length > 0 && (
+                    <p className="text-xs text-brand mt-1">
+                      {expense.tags.map((tag) => `#${tag}`).join(" ")}
+                    </p>
+                  )}
+                </div>
+                <span className="hidden lg:block text-right text-lg font-semibold tabular-nums">
+                  {formatMoney(expense.price)}
+                </span>
               </Link>
             </li>
           ))}

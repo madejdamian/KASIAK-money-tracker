@@ -1,5 +1,0 @@
-.gitignore
-.dockerignore
-.env-dev
-.env-prod
-target

@@ -6,8 +6,6 @@ import com.github.rodis00.backend.exception.*;
 import com.github.rodis00.backend.user.UserRepository;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -19,34 +17,25 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
-    private final AuthenticationManager authenticationManager;
 
     public AuthService(
             UserRepository userRepository,
             PasswordEncoder passwordEncoder,
-            JwtService jwtService,
-            AuthenticationManager authenticationManager
+            JwtService jwtService
     ) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
-        this.authenticationManager = authenticationManager;
     }
 
     public AuthResponse authenticate(AuthRequest request) {
-        UserEntity user = userRepository
-                .findByUsername(request.getUsername())
-                .orElseThrow(() -> new InvalidUsernameException("User does not exist."));
+        // single household account: login is by password only
+        UserEntity user = userRepository.findAll().stream()
+                .findFirst()
+                .orElseThrow(() -> new InvalidPasswordException("Invalid password."));
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword()))
             throw new InvalidPasswordException("Invalid password.");
-
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.getUsername(),
-                        request.getPassword()
-                )
-        );
 
         String jwtToken = jwtService.generateToken(user.getUsername());
         String refreshToken = jwtService.generateRefreshToken(user.getUsername());

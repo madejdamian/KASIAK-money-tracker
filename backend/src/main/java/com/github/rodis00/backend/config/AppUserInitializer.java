@@ -11,8 +11,8 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 
 /**
- * The app has a single household account. Its credentials come from the environment
- * (APP_USERNAME / APP_PASSWORD) so that no password is stored in the repository.
+ * The app has a single household account, protected by a password only. The password comes
+ * from the environment (APP_PASSWORD) so that it is not stored in the repository.
  * On startup the existing account is updated, or created if there is none yet.
  */
 @Component
@@ -21,8 +21,8 @@ public class AppUserInitializer implements ApplicationRunner {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    @Value("${application.user.username:}")
-    private String username;
+    // internal JWT subject only; users never see or type it
+    private static final String USERNAME = "household";
 
     @Value("${application.user.password:}")
     private String password;
@@ -37,14 +37,14 @@ public class AppUserInitializer implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) {
-        if (username.isBlank() || password.isBlank()) {
+        if (password.isBlank()) {
             return;
         }
 
         List<UserEntity> users = userRepository.findAll();
         UserEntity user = users.isEmpty() ? new UserEntity() : users.get(0);
 
-        user.setUsername(username);
+        user.setUsername(USERNAME);
         user.setPassword(passwordEncoder.encode(password));
         userRepository.save(user);
     }

@@ -8,11 +8,11 @@ import {
   inputClass,
   primaryButtonClass,
 } from "../../components/ui/ui";
-import logo from "/et-logo.png";
+import Logo from "../../components/ui/Logo";
 
+// Just the logo and the password field, on both the phone and the desktop.
 const Login = () => {
   const navigate = useNavigate();
-  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
   const { mutate, isPending, error } = useMutation({
@@ -22,28 +22,15 @@ const Login = () => {
 
   function handleSubmit(event) {
     event.preventDefault();
-    mutate({ username, password });
+    mutate({ password });
   }
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4">
-      <form onSubmit={handleSubmit} className="w-full max-w-sm flex flex-col gap-5">
-        <img src={logo} alt="" className="w-24 mx-auto" />
-        <h1 className="text-2xl font-semibold text-center">Budżet domowy</h1>
-
-        <Field label="Użytkownik" htmlFor="username">
-          <input
-            id="username"
-            name="username"
-            type="text"
-            autoComplete="username"
-            autoCapitalize="none"
-            required
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            className={inputClass}
-          />
-        </Field>
+      <form onSubmit={handleSubmit} className="w-full max-w-xs flex flex-col gap-5">
+        <h1 className="flex justify-center mb-6">
+          <Logo size="lg" />
+        </h1>
 
         <Field label="Hasło" htmlFor="password">
           <input
@@ -52,6 +39,7 @@ const Login = () => {
             type="password"
             autoComplete="current-password"
             required
+            autoFocus
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className={inputClass}

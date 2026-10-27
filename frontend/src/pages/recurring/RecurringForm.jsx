@@ -74,7 +74,7 @@ const RecurringEditor = ({ rule, categoryTree, members }) => {
   const busy = save.isPending || remove.isPending;
 
   return (
-    <form onSubmit={handleSubmit} className="px-4 pb-4 flex flex-col gap-5">
+    <form onSubmit={handleSubmit} className="px-4 pb-4 flex flex-col gap-5 lg:max-w-3xl">
       <Field label="Nazwa (np. Czynsz, Netflix)" htmlFor="recurring-name">
         <input
           id="recurring-name"
@@ -175,7 +175,7 @@ const RecurringForm = () => {
       {needsSetup && (
         <p className="px-4 text-neutral-300">
           Najpierw dodaj domowników i kategorie w{" "}
-          <Link to="/settings" className="text-secondColor underline">
+          <Link to="/settings" className="text-brand underline">
             ustawieniach
           </Link>
           .

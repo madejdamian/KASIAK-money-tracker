@@ -102,11 +102,23 @@ class ExpenseTemplateServiceTest {
         when(templateRepository.findById(1L)).thenReturn(Optional.of(template(new BigDecimal("6.50"), null)));
         when(expenseService.saveExpense(any(Expense.class), eq(USERNAME))).thenReturn(new ExpenseEntity());
 
-        templateService.use(1L, new UseTemplateRequest(new BigDecimal("7.20"), null), USERNAME, NOW);
+        templateService.use(1L, new UseTemplateRequest(new BigDecimal("7.20"), null, null), USERNAME, NOW);
 
         ArgumentCaptor<Expense> expense = ArgumentCaptor.forClass(Expense.class);
         verify(expenseService).saveExpense(expense.capture(), eq(USERNAME));
         assertEquals(new BigDecimal("7.20"), expense.getValue().getPrice());
+    }
+
+    @Test
+    void shouldTakeDescriptionGivenWhenUsing() {
+        when(templateRepository.findById(1L)).thenReturn(Optional.of(template(null, null)));
+        when(expenseService.saveExpense(any(Expense.class), eq(USERNAME))).thenReturn(new ExpenseEntity());
+
+        templateService.use(1L, new UseTemplateRequest(new BigDecimal("30.00"), null, "  obiad z rodzicami "), USERNAME, NOW);
+
+        ArgumentCaptor<Expense> expense = ArgumentCaptor.forClass(Expense.class);
+        verify(expenseService).saveExpense(expense.capture(), eq(USERNAME));
+        assertEquals("obiad z rodzicami", expense.getValue().getDescription());
     }
 
     @Test
@@ -123,7 +135,7 @@ class ExpenseTemplateServiceTest {
         when(templateRepository.findById(1L)).thenReturn(Optional.of(template(null, null)));
         when(expenseService.saveExpense(any(Expense.class), eq(USERNAME))).thenReturn(new ExpenseEntity());
 
-        templateService.use(1L, new UseTemplateRequest(new BigDecimal("12.00"), null), USERNAME, NOW);
+        templateService.use(1L, new UseTemplateRequest(new BigDecimal("12.00"), null, null), USERNAME, NOW);
 
         ArgumentCaptor<Expense> expense = ArgumentCaptor.forClass(Expense.class);
         verify(expenseService).saveExpense(expense.capture(), eq(USERNAME));

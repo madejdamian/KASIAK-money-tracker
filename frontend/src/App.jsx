@@ -11,10 +11,12 @@ import DepositForm from "./pages/deposits/DepositForm";
 import Analysis from "./pages/analysis/Analysis";
 import Recurring from "./pages/recurring/Recurring";
 import RecurringForm from "./pages/recurring/RecurringForm";
+import RecurringDepositForm from "./pages/recurring/RecurringDepositForm";
 import Templates from "./pages/templates/Templates";
 import TemplateForm from "./pages/templates/TemplateForm";
 import Tags from "./pages/tags/Tags";
 import Settings from "./pages/settings/Settings";
+import Usage from "./pages/usage/Usage";
 
 const router = createBrowserRouter([
   {
@@ -31,11 +33,13 @@ const router = createBrowserRouter([
           { path: "deposits", element: <Deposits /> },
           { path: "deposits/:slug", element: <DepositForm /> },
           { path: "recurring", element: <Recurring /> },
+          { path: "recurring/deposit/:id", element: <RecurringDepositForm /> },
           { path: "recurring/:id", element: <RecurringForm /> },
           { path: "templates", element: <Templates /> },
           { path: "templates/:id", element: <TemplateForm /> },
           { path: "tags", element: <Tags /> },
           { path: "analysis", element: <Analysis /> },
+          { path: "usage", element: <Usage /> },
           { path: "settings", element: <Settings /> },
           { path: "login", element: <Login /> },
         ],

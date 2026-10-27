@@ -70,7 +70,7 @@ const MembersSection = ({ members }) => {
               </button>
               <button
                 type="button"
-                className="h-10 px-3 rounded-lg bg-red-900/60 text-sm text-red-200"
+                className="h-10 px-3 rounded-lg bg-danger/15 text-sm font-semibold text-danger"
                 onClick={() => handleDelete(member)}
               >
                 Usuń

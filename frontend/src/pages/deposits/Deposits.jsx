@@ -47,18 +47,24 @@ const Deposits = () => {
             <li key={deposit.slug}>
               <Link
                 to={`/deposits/${deposit.slug}`}
-                className="block bg-thirdColor rounded-2xl p-4 active:bg-neutral-800"
+                className="block bg-surface rounded-2xl p-4 transition-colors hover:bg-neutral-900 active:bg-neutral-800 lg:grid lg:grid-cols-[7rem_1fr_16rem_10rem] lg:items-center lg:gap-6 lg:py-3.5"
               >
+                <p className="hidden lg:block text-sm text-neutral-400">
+                  {formatDay(deposit.date)}
+                </p>
                 <div className="flex items-start justify-between gap-3">
                   <span className="font-semibold break-words min-w-0">{deposit.title}</span>
-                  <span className="font-semibold tabular-nums whitespace-nowrap text-emerald-400">
+                  <span className="font-semibold tabular-nums whitespace-nowrap text-brand lg:hidden">
                     {formatMoney(deposit.amount)}
                   </span>
                 </div>
-                <p className="text-sm text-neutral-500 mt-1">
-                  {formatDay(deposit.date)} · {deposit.memberName ?? "?"} ·{" "}
-                  {typeLabel[deposit.depositType] ?? "?"}
+                <p className="text-sm text-neutral-500 mt-1 lg:mt-0">
+                  <span className="lg:hidden">{formatDay(deposit.date)} · </span>
+                  {deposit.memberName ?? "?"} · {typeLabel[deposit.depositType] ?? "?"}
                 </p>
+                <span className="hidden lg:block text-right text-lg font-semibold tabular-nums text-brand">
+                  {formatMoney(deposit.amount)}
+                </span>
               </Link>
             </li>
           ))}

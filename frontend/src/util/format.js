@@ -1,6 +1,8 @@
 const moneyFormat = new Intl.NumberFormat("pl-PL", {
   style: "currency",
   currency: "PLN",
+  // pl-PL skips the thousands separator for 4-digit numbers by default
+  useGrouping: "always",
 });
 
 const monthFormat = new Intl.DateTimeFormat("pl-PL", {

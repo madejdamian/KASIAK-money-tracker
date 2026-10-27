@@ -1,5 +1,6 @@
 package com.github.rodis00.backend.config.jwt;
 
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -45,7 +46,13 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         }
 
         token = authHeader.substring(7);
-        username = jwtService.extractUsername(token);
+        try {
+            username = jwtService.extractUsername(token);
+        } catch (JwtException e) {
+            // an expired or invalid token means "not logged in" (401), so the app can refresh it
+            filterChain.doFilter(request, response);
+            return;
+        }
 
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);

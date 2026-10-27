@@ -1,4 +1,8 @@
 spring:
+  mvc:
+    contentnegotiation:
+      media-types:
+        webmanifest: application/manifest+json
   datasource:
     driver-class-name: ${DB_DRIVER}
     url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
@@ -19,10 +23,8 @@ application:
       jwt-expiration: ${JWT_EXPIRATION}
       jwt-refresh-expiration: ${JWT_REFRESH_EXPIRATION}
   user:
-    username: ${APP_USERNAME:}
     password: ${APP_PASSWORD:}
   frontend-port: ${FRONTEND_PORT}
 springdoc:
   swagger-ui:
-    use-root-path: true
     persist-authorization: true

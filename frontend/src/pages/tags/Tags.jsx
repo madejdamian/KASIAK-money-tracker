@@ -5,6 +5,8 @@ import BarRow from "../../components/analysis/BarRow";
 import { Card, ErrorText, PageHeader } from "../../components/ui/ui";
 import { fetchCategoryTree } from "../../http/categories";
 import { fetchExpenses } from "../../http/expenses";
+import { fetchTags } from "../../http/tags";
+import TagsSection from "../settings/TagsSection";
 import {
   buildCategoryIndex,
   expensesWithTag,
@@ -22,7 +24,7 @@ const TagList = ({ expenses }) => {
     <Card>
       {totals.length === 0 && (
         <p className="text-neutral-500">
-          Brak tagów. Dodaj je w formularzu wydatku, np. „wakacje” albo „remont”.
+          Żaden wydatek nie ma jeszcze tagu. Dodaj tag poniżej, a potem wybierz go w formularzu wydatku.
         </p>
       )}
       {totals.map((tag) => (
@@ -60,7 +62,7 @@ const TagDetails = ({ tag, expenses, index }) => {
       </Card>
 
       <Card>
-        <h2 className="font-semibold mb-1">Wg kategorii</h2>
+        <h2 className="font-display text-xl font-bold mb-1">Wg kategorii</h2>
         {byCategory.map((item) => (
           <BarRow
             key={item.id ?? "none"}
@@ -72,7 +74,7 @@ const TagDetails = ({ tag, expenses, index }) => {
       </Card>
 
       <Card>
-        <h2 className="font-semibold mb-2">Wydatki</h2>
+        <h2 className="font-display text-xl font-bold mb-2">Wydatki</h2>
         <ul className="flex flex-col">
           {tagged.map((expense) => (
             <li key={expense.slug} className="border-b border-neutral-800 last:border-b-0">
@@ -105,6 +107,7 @@ const Tags = () => {
     queryFn: () => fetchExpenses(),
   });
   const categoriesQuery = useQuery({ queryKey: ["categories"], queryFn: fetchCategoryTree });
+  const tagsQuery = useQuery({ queryKey: ["tags"], queryFn: fetchTags });
 
   const index = useMemo(
     () => buildCategoryIndex(flattenCategories(categoriesQuery.data ?? [])),
@@ -117,17 +120,23 @@ const Tags = () => {
     <>
       <PageHeader title={tag ? `#${tag}` : "Tagi"}>
         {tag && (
-          <Link to="/tags" className="text-secondColor underline">
+          <Link to="/tags" className="text-brand underline">
             Wszystkie tagi
           </Link>
         )}
       </PageHeader>
 
-      <div className="px-4 mt-2 flex flex-col gap-4">
+      <div className="px-4 mt-2 flex flex-col gap-4 lg:max-w-4xl">
         {!ready && !expensesQuery.error && <p className="text-neutral-400">Wczytywanie...</p>}
         <ErrorText>{expensesQuery.error ?? categoriesQuery.error}</ErrorText>
 
         {ready && !tag && <TagList expenses={expensesQuery.data} />}
+        {ready && !tag && (
+          <Card>
+            <h2 className="font-display text-xl font-bold mb-3">Dodaj i usuń tagi</h2>
+            <TagsSection tags={tagsQuery.data ?? []} />
+          </Card>
+        )}
         {ready && tag && (
           <TagDetails tag={tag} expenses={expensesQuery.data} index={index} />
         )}

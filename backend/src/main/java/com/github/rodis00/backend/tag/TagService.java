@@ -1,6 +1,7 @@
 package com.github.rodis00.backend.tag;
 
 import com.github.rodis00.backend.entity.TagEntity;
+import com.github.rodis00.backend.exception.EntityNotFoundException;
 import com.github.rodis00.backend.exception.InvalidRequestException;
 import com.github.rodis00.backend.expense.ExpenseRepository;
 import org.springframework.stereotype.Service;
@@ -76,5 +77,30 @@ public class TagService {
     // names of tags that are used by at least one expense
     public List<String> getUsedTagNames() {
         return expenseRepository.findUsedTagNames();
+    }
+
+    // every tag that can be picked on an expense, used or not
+    public List<String> getAllTagNames() {
+        return tagRepository.findAllByOrderByNameAsc().stream().map(TagEntity::getName).toList();
+    }
+
+    public String createTag(String rawName) {
+        Set<String> names = normalize(List.of(rawName));
+        if (names.isEmpty()) {
+            throw new InvalidRequestException("Tag name can not be blank.");
+        }
+        return resolve(List.copyOf(names)).iterator().next().getName();
+    }
+
+    public void deleteTag(String rawName) {
+        String name = normalize(List.of(rawName)).stream().findFirst()
+                .orElseThrow(() -> new InvalidRequestException("Tag name can not be blank."));
+        TagEntity tag = tagRepository.findByName(name)
+                .orElseThrow(() -> new EntityNotFoundException("Tag not found."));
+
+        if (expenseRepository.existsByTagsName(name)) {
+            throw new InvalidRequestException("Tag is used by expenses and cannot be deleted.");
+        }
+        tagRepository.delete(tag);
     }
 }

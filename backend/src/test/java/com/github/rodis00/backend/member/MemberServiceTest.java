@@ -5,6 +5,7 @@ import com.github.rodis00.backend.exception.EntityNotFoundException;
 import com.github.rodis00.backend.exception.InvalidRequestException;
 import com.github.rodis00.backend.expense.ExpenseRepository;
 import com.github.rodis00.backend.income.IncomeRepository;
+import com.github.rodis00.backend.recurring.RecurringDepositRepository;
 import com.github.rodis00.backend.recurring.RecurringExpenseRepository;
 import com.github.rodis00.backend.template.ExpenseTemplateRepository;
 import org.junit.jupiter.api.Test;
@@ -33,6 +34,9 @@ class MemberServiceTest {
 
     @Mock
     private RecurringExpenseRepository recurringRepository;
+
+    @Mock
+    private RecurringDepositRepository recurringDepositRepository;
 
     @Mock
     private ExpenseTemplateRepository templateRepository;

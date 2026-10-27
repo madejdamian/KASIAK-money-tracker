@@ -14,3 +14,6 @@ export const updateDeposit = ({ slug, values }) =>
 
 export const deleteDeposit = (slug) =>
   api(`/incomes/${slug}`, { method: "DELETE" });
+
+// every deposit ever made (the API returns all of them when no month is given)
+export const fetchAllDeposits = () => api("/incomes/");

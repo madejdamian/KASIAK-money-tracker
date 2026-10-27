@@ -7,35 +7,21 @@ services:
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=et_db
     ports:
-      - "5432:5432"
+      - "5433:5432"
     networks:
       - et_network
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
-  backend:
-    build:
-      context: backend
-      dockerfile: Dockerfile
-    container_name: et_backend
+  app:
+    build: .
+    container_name: et_app
     depends_on:
       - db
     env_file:
       - backend/.env-dev
     ports:
       - "8080:8080"
-    networks:
-      - et_network
-
-  frontend:
-    build:
-      context: frontend
-      dockerfile: Dockerfile
-      args:
-        VITE_API_URL: ${VITE_API_URL:-http://localhost:8080/expense-tracker/api/v1}
-    container_name: et_frontend
-    ports:
-      - "5173:80"
     networks:
       - et_network
 

@@ -1,193 +1,134 @@
-import React, { useMemo, useState } from "react";
-import { useQueries, useQuery } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
-import MonthSwitcher from "../../components/ui/MonthSwitcher";
-import { Card, ErrorText, PageHeader, Segmented } from "../../components/ui/ui";
-import CategoryBreakdown from "../../components/analysis/CategoryBreakdown";
-import TrendBars from "../../components/analysis/TrendBars";
-import { ChangesList, DeltaLine } from "../../components/analysis/Comparison";
+import React, { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { ErrorText, PageHeader, Segmented } from "../../components/ui/ui";
+import PeriodBar from "../../components/analysis/PeriodBar";
+import OverviewTab from "../../components/analysis/OverviewTab";
+import CategoriesTab from "../../components/analysis/CategoriesTab";
+import TagsTab from "../../components/analysis/TagsTab";
+import TimeTab from "../../components/analysis/TimeTab";
+import ItemsTab from "../../components/analysis/ItemsTab";
 import { fetchCategoryTree } from "../../http/categories";
+import { fetchAllDeposits } from "../../http/deposits";
 import { fetchExpenses } from "../../http/expenses";
-import {
-  biggestChanges,
-  buildCategoryIndex,
-  expensesBySource,
-  expensesInCategory,
-  expensesInMonth,
-  monthKeyOf,
-  monthlySeries,
-  totalOf,
-} from "../../util/analysis";
-import {
-  flattenCategories,
-  formatMoney,
-  formatUsage,
-  shiftMonth,
-} from "../../util/format";
-import { useMonthParam } from "../../util/useMonthParam";
+import { fetchMembers } from "../../http/members";
+import { fetchTags } from "../../http/tags";
+import { buildCategoryIndex } from "../../util/analysis";
+import { earliestDate, expensesOfPeriod, scopeExpenses } from "../../util/analytics";
+import { flattenCategories, toInputDateTime } from "../../util/format";
+import { baselinePeriod, resolvePeriod } from "../../util/period";
+import { useAnalysisParams } from "../../util/useAnalysisParams";
 
-const sourceOptions = [
-  { value: "ALL", label: "Wszystkie" },
-  { value: "SHARED_CARD", label: "Wspólna" },
-  { value: "PRIVATE_CARD", label: "Prywatna" },
+const tabOptions = [
+  { value: "overview", label: "Przegląd" },
+  { value: "categories", label: "Kategorie" },
+  { value: "time", label: "W czasie" },
+  { value: "items", label: "Pozycje" },
+  { value: "tags", label: "Tagi" },
 ];
 
+const NONE = [];
+
+// The analysis screen. All the numbers are worked out here from every expense, so any period,
+// comparison and filter is just a different way of slicing the same data.
 const Analysis = () => {
-  const [month, setMonth] = useMonthParam();
-  const [source, setSource] = useState("ALL");
-  const [mode, setMode] = useState("drill");
-  const [path, setPath] = useState([]);
-  const [trendField, setTrendField] = useState("price");
+  const [state, set] = useAnalysisParams();
 
-  const categoriesQuery = useQuery({
-    queryKey: ["categories"],
-    queryFn: fetchCategoryTree,
-  });
+  const expensesQuery = useQuery({ queryKey: ["expenses", "all"], queryFn: () => fetchExpenses() });
+  const categoriesQuery = useQuery({ queryKey: ["categories"], queryFn: fetchCategoryTree });
+  const depositsQuery = useQuery({ queryKey: ["deposits", "all"], queryFn: fetchAllDeposits });
+  const membersQuery = useQuery({ queryKey: ["members"], queryFn: fetchMembers });
+  const tagsQuery = useQuery({ queryKey: ["tags"], queryFn: fetchTags });
 
-  // 12 months back from the selected one can reach into the previous year
-  const yearQueries = useQueries({
-    queries: [month.year, month.year - 1].map((year) => ({
-      queryKey: ["expenses", "year", year],
-      queryFn: () => fetchExpenses({ year }),
-    })),
-  });
+  const today = toInputDateTime().slice(0, 10);
+  const expenses = expensesQuery.data ?? NONE;
 
   const index = useMemo(
-    () => buildCategoryIndex(flattenCategories(categoriesQuery.data ?? [])),
+    () => buildCategoryIndex(flattenCategories(categoriesQuery.data ?? NONE)),
     [categoriesQuery.data]
   );
 
-  const thisYear = yearQueries[0].data;
-  const previousYear = yearQueries[1].data;
-  const allExpenses = useMemo(
-    () => [...(thisYear ?? []), ...(previousYear ?? [])],
-    [thisYear, previousYear]
+  // member, card and tag filters apply to everything; the category is chosen by drilling down
+  const scoped = useMemo(
+    () => scopeExpenses(expenses, index, { memberId: state.member, source: state.card, tag: state.tag }),
+    [expenses, index, state.member, state.card, state.tag]
   );
 
-  const scoped = expensesBySource(allExpenses, source);
-  const current = expensesInMonth(scoped, month);
-  const previous = expensesInMonth(scoped, shiftMonth(month, -1));
-  const lastYear = expensesInMonth(scoped, shiftMonth(month, -12));
+  const period = useMemo(
+    () =>
+      resolvePeriod(state.p, {
+        today,
+        earliest: earliestDate(scoped),
+        from: state.from,
+        to: state.to,
+      }),
+    [state.p, state.from, state.to, today, scoped]
+  );
+  const baseline = useMemo(() => baselinePeriod(period, state.cmp), [period, state.cmp]);
 
-  const openedId = mode === "drill" && path.length > 0 ? path[path.length - 1] : null;
-  const openedCategory = openedId == null ? null : index.get(openedId);
-  const trendScope = expensesInCategory(scoped, index, openedId);
-  const usageUnit = openedCategory?.unit ?? null;
-  const field = usageUnit ? trendField : "price";
+  const current = useMemo(() => expensesOfPeriod(scoped, period), [scoped, period]);
+  const baselineExpenses = useMemo(
+    () => (baseline ? expensesOfPeriod(scoped, baseline) : null),
+    [scoped, baseline]
+  );
 
-  const series = monthlySeries(trendScope, month, 12, { field });
-  const changeDepth = mode === "drill" ? 0 : Number(mode);
-  const changes = biggestChanges(current, previous, index, changeDepth);
+  const loading =
+    expensesQuery.isPending || categoriesQuery.isPending || depositsQuery.isPending;
+  const error =
+    expensesQuery.error ?? categoriesQuery.error ?? depositsQuery.error ?? membersQuery.error;
 
-  const loading = categoriesQuery.isPending || yearQueries.some((q) => q.isPending);
-  const error = categoriesQuery.error ?? yearQueries.find((q) => q.error)?.error;
-
-  function changeMonth(next) {
-    setMonth(next);
-    setPath([]);
-  }
+  const shared = { state, set, index, current, baselineExpenses, period, baseline, today };
 
   return (
     <>
       <PageHeader title="Analizy" />
-      <MonthSwitcher value={month} onChange={changeMonth} />
 
-      <div className="px-4 flex flex-col gap-4 mt-2">
-        <Segmented
-          name="source"
-          value={source}
-          onChange={setSource}
-          options={sourceOptions}
+      <div className="px-4 mt-2 flex flex-col gap-4 lg:mt-4 lg:gap-6">
+        <PeriodBar
+          state={state}
+          set={set}
+          period={period}
+          baseline={baseline}
+          members={membersQuery.data ?? NONE}
+          tags={tagsQuery.data ?? NONE}
+          today={today}
         />
+
+        <div className="lg:max-w-2xl">
+          <Segmented
+            name="tab"
+            value={state.tab}
+            onChange={(value) => set({ tab: value })}
+            options={tabOptions}
+          />
+        </div>
 
         {loading && <p className="text-neutral-400">Wczytywanie...</p>}
         <ErrorText>{error}</ErrorText>
 
-        {!loading && !error && (
-          <>
-            <Card>
-              <p className="text-sm text-neutral-400">Wydatki w tym miesiącu</p>
-              <p className="text-3xl font-semibold mt-1 tabular-nums">
-                {formatMoney(totalOf(current))}
-              </p>
-              <div className="mt-3 border-t border-neutral-800 pt-2">
-                <DeltaLine
-                  label="Poprzedni miesiąc"
-                  current={totalOf(current)}
-                  previous={totalOf(previous)}
-                />
-                <DeltaLine
-                  label="Rok temu"
-                  current={totalOf(current)}
-                  previous={totalOf(lastYear)}
-                />
-              </div>
-            </Card>
-
-            <Card>
-              <h2 className="font-semibold mb-3">Wydatki wg kategorii</h2>
-              <CategoryBreakdown
-                expenses={current}
-                index={index}
-                mode={mode}
-                onModeChange={(value) => {
-                  setMode(value);
-                  setPath([]);
-                }}
-                path={path}
-                onPathChange={setPath}
-              />
-            </Card>
-
-            <Card>
-              <h2 className="font-semibold mb-1">Największe zmiany</h2>
-              <p className="text-sm text-neutral-500 mb-2">
-                Względem poprzedniego miesiąca, wg wybranego poziomu kategorii.
-              </p>
-              <ChangesList changes={changes} />
-            </Card>
-
-            <Card>
-              <h2 className="font-semibold">
-                Ostatnie 12 miesięcy
-                {openedCategory ? `: ${openedCategory.name}` : ""}
-              </h2>
-              {usageUnit && (
-                <div className="my-3">
-                  <Segmented
-                    name="trendField"
-                    value={field}
-                    onChange={setTrendField}
-                    options={[
-                      { value: "price", label: "Kwota" },
-                      { value: "usage", label: `Zużycie (${usageUnit})` },
-                    ]}
-                  />
-                </div>
-              )}
-              <TrendBars
-                series={series}
-                highlightKey={monthKeyOf(month)}
-                formatValue={(value) =>
-                  field === "usage" ? formatUsage(value, usageUnit) : formatMoney(value)
-                }
-              />
-              {!usageUnit && (
-                <p className="text-xs text-neutral-500 mt-2">
-                  Otwórz w drzewie kategorię z jednostką (np. Prąd), aby zobaczyć trend
-                  zużycia.
-                </p>
-              )}
-            </Card>
-
-            <Link to="/tags" className="block bg-thirdColor rounded-2xl p-4">
-              Analiza tagów (projekty, np. wakacje, remont)
-              <span className="block text-sm text-neutral-500">
-                Ile kosztował cały projekt, w podziale na kategorie.
-              </span>
-            </Link>
-          </>
+        {!loading && !error && state.tab === "overview" && <OverviewTab {...shared} />}
+        {!loading && !error && state.tab === "categories" && (
+          <CategoriesTab {...shared} scoped={scoped} />
         )}
+        {!loading && !error && state.tab === "tags" && (
+          <TagsTab
+            set={set}
+            current={current}
+            baselineExpenses={baselineExpenses}
+            tagCount={(tagsQuery.data ?? NONE).length}
+          />
+        )}
+        {!loading && !error && state.tab === "time" && (
+          <TimeTab
+            set={set}
+            index={index}
+            scoped={scoped}
+            allExpenses={expenses}
+            deposits={depositsQuery.data ?? NONE}
+            period={period}
+            today={today}
+          />
+        )}
+        {!loading && !error && state.tab === "items" && <ItemsTab current={current} />}
       </div>
     </>
   );

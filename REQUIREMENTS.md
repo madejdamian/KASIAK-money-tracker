@@ -29,18 +29,29 @@ _Do uzupełnienia._
 - [ ] Na każdym poziomie widoczna suma wydatków kategorii (z podkategoriami) i jej udział w budżecie.
 - [ ] Analiza w okresach miesięcznych: porównanie miesiąc do miesiąca, zarówno kwot, jak i zużycia (np. zużycie prądu w kWh w kolejnych miesiącach).
 
+### Dodatkowe funkcjonalności
+- [ ] Wydatki cykliczne (czynsz, kredyt, abonamenty): dodają się automatycznie co miesiąc, użytkownik potwierdza je lub zmienia kwotę.
+- [ ] Podsumowanie miesiąca na jednym ekranie: wpłaty, wydatki, saldo i saldo przeniesione z poprzedniego miesiąca.
+- [ ] Wykresy: udział kategorii i trendy miesięczne, z drill-downem po poziomach kategorii.
+- [ ] Porównanie z poprzednim miesiącem (oraz tym samym miesiącem rok wcześniej) z oznaczeniem największych różnic.
+- [ ] Wyszukiwanie i filtry: po kategorii, domowniku, karcie, dacie, kwocie i tekście.
+- [ ] Szablony i ostatnie wydatki: szybkie dodawanie powtarzalnych zakupów jednym kliknięciem.
+- [ ] Tagi niezależne od kategorii (np. „wakacje”, „remont”), do śledzenia projektów przechodzących przez kilka kategorii.
+
 ### Ustalenia
 - Jedno wspólne konto dla całego domu (bez osobnych kont/logowania domowników).
 - Wydatek jest przypisany do domownika i do źródła płatności: karta prywatna lub karta wspólna.
 - Budżet jest miesięczny, bez limitów na kategorie. Co miesiąc dochodzą nowe wpłaty, a dodatnie saldo przenosi się na kolejny miesiąc, a ujemne nie. Wpłaty mogą pojawiać się też w trakcie miesiąca.
 - Kategorie mają dowolną głębokość zagnieżdżenia, np. rachunki -> media -> prąd.
 - Kategoria może mieć dodatkowo wpisywane zużycie (np. kWh dla prądu) obok kwoty.
+- Brak rozliczeń między domownikami (kto komu jest winien). Jeśli ktoś zapłaci prywatną kartą i zwróci sobie z konta wspólnego, zmienia w wydatku rodzaj płatności na wspólną.
+- Poza zakresem: historia zmian wydatków, automatyczny koszt jednostkowy (zł/kWh), załączniki (paragony), eksport/import CSV.
 
 ## Wymagania niefunkcjonalne
 
-_Do uzupełnienia (wydajność, bezpieczeństwo, UX, technologia itp.)._
-
-- [ ] ...
+- [ ] Aplikacja PWA (instalowalna na telefonie) - wymóg obowiązkowy.
+- [ ] UI mobile-first: większość użycia będzie z telefonu, desktop jest drugorzędny.
+- [ ] Szybkie dodawanie wydatku (mało kroków, wygodne na telefonie).
 
 ## Wytyczne techniczne
 

@@ -11,7 +11,7 @@ _Do uzupełnienia._
 
 ### Budżet domowy
 - [ ] Dodawanie budżetu domowego z wpłatami/wkładami od różnych domowników (każdy domownik wnosi swoją część).
-- [ ] Budżet zeruje się co miesiąc: na początku miesiąca wpisujemy, ile każdy przelał na wspólne konto.
+- [ ] Nowy miesiąc zaczyna się od nowych wpłat: na początku miesiąca wpisujemy, ile każdy przelał na wspólne konto. Niewykorzystane saldo z poprzedniego miesiąca przenosi się na kolejny.
 - [ ] Możliwość dodania dodatkowych wpłat (extra) w trakcie miesiąca, również z informacją od kogo.
 
 ### Wydatki i kategorie
@@ -26,7 +26,7 @@ _Do uzupełnienia._
 ### Ustalenia
 - Jedno wspólne konto dla całego domu (bez osobnych kont/logowania domowników).
 - Wydatek jest przypisany do domownika i do źródła płatności: karta prywatna lub karta wspólna.
-- Budżet jest miesięczny, bez limitów na kategorie. Co miesiąc startuje od zera (nic się nie przenosi automatycznie), a wpłaty mogą pojawiać się też w trakcie miesiąca.
+- Budżet jest miesięczny, bez limitów na kategorie. Co miesiąc dochodzą nowe wpłaty, a niewykorzystane saldo przenosi się na kolejny miesiąc. Wpłaty mogą pojawiać się też w trakcie miesiąca.
 - Kategorie mają dowolną głębokość zagnieżdżenia, np. rachunki -> media -> prąd.
 - Kategoria może mieć dodatkowo wpisywane zużycie (np. kWh dla prądu) obok kwoty.
 

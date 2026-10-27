@@ -87,8 +87,8 @@ Stan na dzień analizy (kod pochodzi z gotowego projektu).
 | Przełączanie szczegółowości kategorii | Częściowo | Wydatek można przypisać do dowolnego poziomu drzewa; widok z przełączaniem poziomu: etap 5 |
 | Zużycie przy wydatku (np. kWh) | Backend gotowy | Pole `usageAmount` w wydatku i jednostka `unit` w kategorii. Frontend: etap 4 |
 | Wydatki cykliczne | Brak | W `Summaries.jsx` jest tylko zakomentowana makieta „Schedules”, bez backendu |
-| Miesięczny budżet z przenoszeniem dodatniego salda | Brak | Jest filtr rok/miesiąc, ale nie ma logiki salda i okresów rozliczeniowych |
-| Podsumowanie miesiąca | Częściowo | Dashboard pokazuje wartości i wykresy; trzeba sprawdzić, jak liczy saldo |
+| Miesięczny budżet z przenoszeniem dodatniego salda | Backend gotowy | `GET /budget/summary?year=&month=`: saldo z poprzedniego miesiąca (tylko dodatnie) + wpłaty (miesięczne i extra, per domownik) - wydatki ze wspólnej karty. Frontend: etap 4 |
+| Podsumowanie miesiąca | Backend gotowy | Dane z `/budget/summary`; ekran w etapie 4 (dashboard liczy saldo po staremu) |
 | Drill-down po poziomach kategorii | Brak | Wykresy działają na płaskich kategoriach |
 | Wykresy i trendy miesięczne | Częściowo | Są `DoughnutChart`, `BarChart`, `LineChart`; do dostosowania do nowego modelu |
 | Porównanie miesiąc do miesiąca, zużycia | Brak | |
@@ -108,4 +108,5 @@ Stan na dzień analizy (kod pochodzi z gotowego projektu).
 ### Etap 2 (model danych) - stan
 - Backend zrobiony: domownicy, drzewo kategorii, karta, zużycie, wpłaty z informacją od kogo i typem (miesięczna/extra). Nie został zbudowany ani uruchomiony (brak dostępu do Mavena w środowisku), testy jednostkowe zaktualizowane i dopisane, ale niesprawdzone.
 - Frontend nie jest jeszcze dopasowany: formularze nadal używają starych kategorii-enumów, więc dodawanie wydatków i wpłat z UI nie zadziała do czasu etapu 4.
+- Budżet liczony na bieżąco (nic nie jest zapisywane): saldo miesiąca = dodatnie saldo poprzedniego miesiąca + wpłaty - wydatki zapłacone kartą wspólną. Wydatki z karty prywatnej nie zmniejszają budżetu (są tylko pokazywane osobno); zwrot z konta wspólnego = zmiana rodzaju płatności na wspólną. Ujemne saldo nie przenosi się dalej.
 - Dane logowania jedynego konta pochodzą ze zmiennych środowiskowych `APP_USERNAME` i `APP_PASSWORD` (wzór w `backend/.env.example`).

@@ -8,7 +8,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import googleIcon from "../../assets/google-color-icon.png";
 import Input from "../../components/form/Input";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import { login } from "../../http/auth";
 import { generateRandomColor } from "../../util/ColorGenerator";
@@ -112,13 +112,6 @@ const Login = () => {
               </Input>
 
               <div className="flex flex-col md:flex-row md:justify-between lg:flex-col lg:gap-2 2xl:flex-row 2xl:gap-0">
-                <Link
-                  to={"/forgot-password"}
-                  className="text-neutral-500 -mt-3 transition-all duration-300 hover:text-red-500 relative float-right lg:text-sm md:order-2 lg:order-1 2xl:order-2"
-                >
-                  Forgot your password?
-                </Link>
-
                 {formErrors && (
                   <p className="text-red-500 h-4 md:-mt-3 lg:order-2 2xl:order-1 2xl:-mt-4">
                     {formErrors.password}
@@ -135,15 +128,6 @@ const Login = () => {
               >
                 {isPending ? "Logging in..." : "Login"}
               </button>
-              <div>
-                <span className="text-white pr-2">Don't have an account?</span>
-                <Link
-                  to={"/signup"}
-                  className="text-secondColor transition-all duration-300 hover:text-red-600"
-                >
-                  Sign up
-                </Link>
-              </div>
             </div>
 
             <div className="flex items-center justify-between mt-6">

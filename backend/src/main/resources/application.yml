@@ -1,7 +1,4 @@
 spring:
-  sql:
-    init:
-      mode: ${INIT_MODE}
   datasource:
     driver-class-name: ${DB_DRIVER}
     url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
@@ -14,17 +11,6 @@ spring:
       hibernate:
         dialect: ${HIBERNATE_DIALECT}
     show-sql: ${SHOW_SQL}
-  servlet:
-    multipart:
-      max-file-size: ${MAX_FILE_SIZE}
-  mail:
-    host: ${MAIL_HOST}
-    port: ${MAIL_PORT}
-    username: ${MAIL_USERNAME}
-    password: ${MAIL_PASSWORD}
-    properties:
-      mail.smtp.auth: true
-      mail.smtp.starttls.enable: true
 
 application:
   security:
@@ -32,10 +18,6 @@ application:
       secret-key: ${JWT_SECRET_KEY}
       jwt-expiration: ${JWT_EXPIRATION}
       jwt-refresh-expiration: ${JWT_REFRESH_EXPIRATION}
-  image:
-    upload-dir: ${UPLOAD_DIR}
-  password-reset-token:
-    expiration-time: ${PASSWORD_RESET_TOKEN_EXPIRATION}
   frontend-port: ${FRONTEND_PORT}
 springdoc:
   swagger-ui:

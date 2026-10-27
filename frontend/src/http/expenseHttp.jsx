@@ -1,6 +1,6 @@
 export async function newExpense({ userId, values, token }) {
   const response = await fetch(
-    `http://localhost:8080/expense-tracker/api/v1/expenses/users/${userId}`,
+    `http://localhost:8080/expense-tracker/api/v1/expenses/`,
     {
       method: "POST",
       headers: {
@@ -32,11 +32,11 @@ export async function fetchExpenses({
   let url = "";
 
   if (year === "" && month === "") {
-    url = `http://localhost:8080/expense-tracker/api/v1/expenses/pages/users/${userId}?pageSize=${pageSize}&sortBy=date&pageNumber=${pageNumber}`;
+    url = `http://localhost:8080/expense-tracker/api/v1/expenses/pages?pageSize=${pageSize}&sortBy=date&pageNumber=${pageNumber}`;
   } else if (year && month === "") {
-    url = `http://localhost:8080/expense-tracker/api/v1/expenses/pages/users/${userId}?pageSize=${pageSize}&sortBy=date&year=${year}&pageNumber=${pageNumber}`;
+    url = `http://localhost:8080/expense-tracker/api/v1/expenses/pages?pageSize=${pageSize}&sortBy=date&year=${year}&pageNumber=${pageNumber}`;
   } else if (year && month) {
-    url = `http://localhost:8080/expense-tracker/api/v1/expenses/pages/users/${userId}?pageSize=${pageSize}&sortBy=date&year=${year}&month=${month}&pageNumber=${pageNumber}`;
+    url = `http://localhost:8080/expense-tracker/api/v1/expenses/pages?pageSize=${pageSize}&sortBy=date&year=${year}&month=${month}&pageNumber=${pageNumber}`;
   }
 
   const response = await fetch(url, {
@@ -120,7 +120,7 @@ export async function deleteExpenseById({ id, token }) {
 
 export async function fetchExpenseYears({ token, userId, yearLimit }) {
   const response = await fetch(
-    `http://localhost:8080/expense-tracker/api/v1/expenses/users/${userId}/years?yearLimit=${
+    `http://localhost:8080/expense-tracker/api/v1/expenses/years?yearLimit=${
       yearLimit ? yearLimit : false
     }`,
     {
@@ -145,11 +145,11 @@ export async function fetchAllExpenses({ userId, token, year, month }) {
   let url = "";
 
   if (year === "" && month === "") {
-    url = `http://localhost:8080/expense-tracker/api/v1/expenses/users/${userId}`;
+    url = `http://localhost:8080/expense-tracker/api/v1/expenses/`;
   } else if (year && month === "") {
-    url = `http://localhost:8080/expense-tracker/api/v1/expenses/users/${userId}?year=${year}`;
+    url = `http://localhost:8080/expense-tracker/api/v1/expenses/?year=${year}`;
   } else if (year && month) {
-    url = `http://localhost:8080/expense-tracker/api/v1/expenses/users/${userId}?year=${year}&month=${month}`;
+    url = `http://localhost:8080/expense-tracker/api/v1/expenses/?year=${year}&month=${month}`;
   }
 
   const response = await fetch(url, {
@@ -171,7 +171,7 @@ export async function fetchAllExpenses({ userId, token, year, month }) {
 
 export async function latestAddedExpense({ userId, token }) {
   const response = await fetch(
-    `http://localhost:8080/expense-tracker/api/v1/expenses/users/${userId}/last-added`,
+    `http://localhost:8080/expense-tracker/api/v1/expenses/last-added`,
     {
       headers: {
         "Content-Type": "application/json",

@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.List;
 
 @RestController
@@ -22,20 +23,6 @@ public class ExpenseController {
 
     public ExpenseController(ExpenseService expenseService) {
         this.expenseService = expenseService;
-    }
-
-    @Operation(
-            summary = "Retrieve a list of expenses"
-    )
-    @GetMapping("/")
-    public ResponseEntity<List<ExpenseDto>> getExpenses() {
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(expenseService
-                        .getAllExpenses()
-                        .stream()
-                        .map(ExpenseDto::from)
-                        .toList());
     }
 
     @Operation(
@@ -51,18 +38,18 @@ public class ExpenseController {
     }
 
     @Operation(
-            summary = "Retrieve a list of user expenses by username and optional year and month"
+            summary = "Retrieve a list of user expenses and optional year and month"
     )
-    @GetMapping("/users/{username}")
+    @GetMapping("/")
     public ResponseEntity<List<ExpenseDto>> getUserExpenses(
-            @PathVariable String username,
+            Principal principal,
             @RequestParam(required = false) Integer year,
             @RequestParam(required = false) Integer month
     ) {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(expenseService
-                        .getAllUserExpenses(username, year, month)
+                        .getAllUserExpenses(principal.getName(), year, month)
                         .stream()
                         .map(ExpenseDto::from)
                         .toList());
@@ -71,9 +58,9 @@ public class ExpenseController {
     @Operation(
             summary = "Retrieve a list of user expenses with pagination and sorting"
     )
-    @GetMapping("/pages/users/{username}")
+    @GetMapping("/pages")
     public ResponseEntity<Page<ExpenseDto>> getPageOfUserExpenses(
-            @PathVariable String username,
+            Principal principal,
             @RequestParam(defaultValue = "0") @Min(0) Integer pageNumber,
             @RequestParam(defaultValue = "10") @Min(1) Integer pageSize,
             @RequestParam(defaultValue = "DESC") Sort.Direction sortDirection,
@@ -90,21 +77,21 @@ public class ExpenseController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(expenseService
-                        .findAllExpensesByUsername(username, expensePage, year, month)
+                        .findAllExpensesByUsername(principal.getName(), expensePage, year, month)
                         .map(ExpenseDto::from));
     }
 
     @Operation(
             summary = "Create a new expense"
     )
-    @PostMapping("/users/{username}")
+    @PostMapping("/")
     public ResponseEntity<ExpenseDto> addExpense(
             @RequestBody @Valid Expense expense,
-            @PathVariable String username
+            Principal principal
     ) {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(ExpenseDto.from(expenseService.saveExpense(expense, username)));
+                .body(ExpenseDto.from(expenseService.saveExpense(expense, principal.getName())));
     }
 
     @Operation(
@@ -136,21 +123,21 @@ public class ExpenseController {
     @Operation(
             summary = "Retrieve a list of expense years"
     )
-    @GetMapping("/users/{username}/years")
+    @GetMapping("/years")
     public ResponseEntity<List<Integer>> getYears(
-            @PathVariable String username,
+            Principal principal,
             @RequestParam(required = false) boolean yearLimit
     ) {
-        return ResponseEntity.ok(expenseService.getYears(username, yearLimit));
+        return ResponseEntity.ok(expenseService.getYears(principal.getName(), yearLimit));
     }
 
     @Operation(
             summary = "Retrieve a single user's last added expense."
     )
-    @GetMapping("/users/{username}/last-added")
+    @GetMapping("/last-added")
     public ResponseEntity<ExpenseDto> getLastUserExpense(
-            @PathVariable String username
+            Principal principal
     ) {
-        return ResponseEntity.ok(expenseService.getLastUserExpense(username));
+        return ResponseEntity.ok(expenseService.getLastUserExpense(principal.getName()));
     }
 }

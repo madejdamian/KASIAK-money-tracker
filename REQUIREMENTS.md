@@ -94,10 +94,10 @@ Stan na dzień analizy (kod pochodzi z gotowego projektu).
 | Tagi | Brak | |
 | PWA | Brak | Brak manifestu, service workera i wtyczki PWA w Vite |
 | UI mobile-first | Częściowo | Widoki mają klasy responsywne (Tailwind), ale to układ desktop-first i trzeba go przejrzeć pod telefon |
-| Logowanie, reset hasła, profil | Jest | Przy jednym wspólnym koncie część (rejestracja, reset hasła, zdjęcie) może być zbędna; do decyzji |
+| Logowanie | Jest | Zostaje jedno wspólne konto (JWT). Rejestracja, reset hasła, e-mail, zdjęcie profilu i ustawienia usunięte w etapie 1 |
 
 ### Uwagi do decyzji
-- Dane startowe `data.sql` generują losowe wydatki i przychody dla użytkownika `admin`; do usunięcia lub zmiany.
 - `Summaries.jsx` to wyłącznie makieta („Section in progress”), czyli miejsce na przyszłe podsumowania.
 - Kategorie trzeba przenieść z enumów do bazy (tabela + migracja), bo od tego zależą hierarchia, drill-down i wykresy.
-- Endpointy mają `username` w ścieżce; przy jednym wspólnym koncie można to uprościć.
+- Etap 1 (porządki) wykonany: usunięto `data.sql`, rejestrację, reset hasła, wysyłkę e-maili, zdjęcia profilu, ustawienia oraz zarządzanie użytkownikami. Endpointy nie mają już `username` w ścieżce (użytkownik pochodzi z tokenu JWT).
+- Konto: nadal istnieje jedyny użytkownik `admin` z migracji Flyway; zmiana jego nazwy/hasła (np. kolejna migracja) do decyzji w kolejnym etapie.

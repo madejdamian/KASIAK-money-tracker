@@ -1,6 +1,6 @@
 export async function newIncome({ userId, values, token }) {
   const response = await fetch(
-    `http://localhost:8080/expense-tracker/api/v1/incomes/users/${userId}`,
+    `http://localhost:8080/expense-tracker/api/v1/incomes/`,
     {
       method: "POST",
       headers: {
@@ -32,11 +32,11 @@ export async function fetchIncomes({
   let url = "";
 
   if (year === "" && month === "") {
-    url = `http://localhost:8080/expense-tracker/api/v1/incomes/pages/users/${userId}?pageSize=${pageSize}&sortBy=date&pageNumber=${pageNumber}`;
+    url = `http://localhost:8080/expense-tracker/api/v1/incomes/pages?pageSize=${pageSize}&sortBy=date&pageNumber=${pageNumber}`;
   } else if (year && month === "") {
-    url = `http://localhost:8080/expense-tracker/api/v1/incomes/pages/users/${userId}?pageSize=${pageSize}&sortBy=date&year=${year}&pageNumber=${pageNumber}`;
+    url = `http://localhost:8080/expense-tracker/api/v1/incomes/pages?pageSize=${pageSize}&sortBy=date&year=${year}&pageNumber=${pageNumber}`;
   } else if (year && month) {
-    url = `http://localhost:8080/expense-tracker/api/v1/incomes/pages/users/${userId}?pageSize=${pageSize}&sortBy=date&year=${year}&month=${month}&pageNumber=${pageNumber}`;
+    url = `http://localhost:8080/expense-tracker/api/v1/incomes/pages?pageSize=${pageSize}&sortBy=date&year=${year}&month=${month}&pageNumber=${pageNumber}`;
   }
 
   const response = await fetch(url, {
@@ -120,7 +120,7 @@ export async function deleteIncomeById({ id, token }) {
 
 export async function fetchIncomeYears({ token, userId, yearLimit }) {
   const response = await fetch(
-    `http://localhost:8080/expense-tracker/api/v1/incomes/users/${userId}/years?yearLimit=${
+    `http://localhost:8080/expense-tracker/api/v1/incomes/years?yearLimit=${
       yearLimit ? yearLimit : false
     }`,
     {
@@ -145,11 +145,11 @@ export async function fetchAllIncomes({ userId, token, year, month }) {
   let url = "";
 
   if (year === "" && month === "") {
-    url = `http://localhost:8080/expense-tracker/api/v1/incomes/users/${userId}`;
+    url = `http://localhost:8080/expense-tracker/api/v1/incomes/`;
   } else if (year && month === "") {
-    url = `http://localhost:8080/expense-tracker/api/v1/incomes/users/${userId}?year=${year}`;
+    url = `http://localhost:8080/expense-tracker/api/v1/incomes/?year=${year}`;
   } else if (year && month) {
-    url = `http://localhost:8080/expense-tracker/api/v1/incomes/users/${userId}?year=${year}&month=${month}`;
+    url = `http://localhost:8080/expense-tracker/api/v1/incomes/?year=${year}&month=${month}`;
   }
 
   const response = await fetch(url, {
@@ -171,7 +171,7 @@ export async function fetchAllIncomes({ userId, token, year, month }) {
 
 export async function latestAddedIncome({ userId, token }) {
   const response = await fetch(
-    `http://localhost:8080/expense-tracker/api/v1/incomes/users/${userId}/last-added`,
+    `http://localhost:8080/expense-tracker/api/v1/incomes/last-added`,
     {
       headers: {
         "Content-Type": "application/json",

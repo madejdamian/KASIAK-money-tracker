@@ -10,17 +10,12 @@ import {
   faRightFromBracket,
   faXmark,
   faBars,
-  faGear,
 } from "@fortawesome/free-solid-svg-icons";
 import { useMediaQuery } from "@react-hook/media-query";
 import { NavLink, useLocation } from "react-router-dom";
 import "./Navbar.css";
 import { useDispatch, useSelector } from "react-redux";
 import { authActions } from "../../store/auth-slice";
-import UserImage from "../userImage/UserImage";
-import { useQuery } from "@tanstack/react-query";
-import { getUserData } from "../../http/user";
-import { getImage } from "../../http/image";
 
 const Navbar = () => {
   const [activeMenu, setActiveMenu] = useState(false);
@@ -31,8 +26,6 @@ const Navbar = () => {
   const pathParts = location.pathname.split("/");
   const id = pathParts[pathParts.length - 1];
   const userId = useSelector((state) => state.auth.user);
-  const token = localStorage.getItem("token");
-  const [image, setImage] = useState(null);
   const isSmallScreen = useMediaQuery("(max-width: 767.5px)");
 
   function handleLogout() {
@@ -44,24 +37,6 @@ const Navbar = () => {
   function handleActiveMenu() {
     setActiveMenu((prev) => !prev);
   }
-
-  const { data } = useQuery({
-    queryKey: ["user", { userId, token }],
-    queryFn: () => getUserData({ userId, token }),
-    enabled: !!userId,
-  });
-
-  const { data: dataImage } = useQuery({
-    queryKey: ["image", token, image],
-    queryFn: () => getImage(image, token),
-    enabled: !!image && !!userId,
-  });
-
-  useEffect(() => {
-    if (data) {
-      setImage(() => data.profilePicture);
-    }
-  }, [data]);
 
   useEffect(() => {
     const indicator = indicatorRef.current;
@@ -101,19 +76,7 @@ const Navbar = () => {
         case "/summaries":
           indicator.style.transform = "translateY(16rem)";
           break;
-        case "/settings":
-          indicator.style.transform = "translateY(calc(100vh - 13rem))";
-          break;
         case "/login":
-          indicator.style.transform = "translateY(calc(100vh - 9rem))";
-          break;
-        case "/forgot-password":
-          indicator.style.transform = "translateY(calc(100vh - 9rem))";
-          break;
-        case "/reset-password":
-          indicator.style.transform = "translateY(calc(100vh - 9rem))";
-          break;
-        case "/signup":
           indicator.style.transform = "translateY(calc(100vh - 9rem))";
           break;
         default:
@@ -147,10 +110,9 @@ const Navbar = () => {
         } md:left-0 md:w-16 h-screen bg-fourthColor transition-all duration-500 overflow-hidden md:hover:w-60`}
       >
         <div className="w-full h-12 flex items-center mt-3">
-          <UserImage
-            className="w-12 h-12 mx-2 text-2xl"
-            userImage={dataImage}
-          />
+          <div className="w-12 h-12 mx-2 text-2xl shrink-0 flex items-center justify-center rounded-full font-bold text-white bg-secondColor">
+            {userId ? userId.charAt(0).toUpperCase() : "?"}
+          </div>
           <span className="w-44 block uppercase pl-4 text-amber-300 font-semibold">
             {userId && userId.length > 10 ? (
               <span>{userId.slice(0, 10) + "..."}</span>
@@ -219,15 +181,6 @@ const Navbar = () => {
               className="w-16 shrink-0 text-2xl"
             />
             <span className="w-44 block uppercase pl-4">Summaries</span>
-          </NavLink>
-        </div>
-        <div className="w-full h-12 absolute mt-4 top-[calc(100%-9rem)] hover:bg-gray-700">
-          <NavLink
-            to={"/settings"}
-            className="h-full w-full flex items-center relative text-white z-10"
-          >
-            <FontAwesomeIcon icon={faGear} className="w-16 shrink-0 text-2xl" />
-            <span className="w-44 block uppercase pl-4">Settings</span>
           </NavLink>
         </div>
         <div className="w-full h-12 absolute mt-4 top-[calc(100%-5rem)] hover:bg-gray-700">

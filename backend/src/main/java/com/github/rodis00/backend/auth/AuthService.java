@@ -2,12 +2,9 @@ package com.github.rodis00.backend.auth;
 
 import com.github.rodis00.backend.config.jwt.JwtService;
 import com.github.rodis00.backend.config.jwt.TokenResponse;
-import com.github.rodis00.backend.emailSender.EmailService;
 import com.github.rodis00.backend.entity.UserEntity;
 import com.github.rodis00.backend.exception.*;
-import com.github.rodis00.backend.role.RoleRepository;
 import com.github.rodis00.backend.user.UserRepository;
-import com.github.rodis00.backend.user.UserService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -16,7 +13,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
-import java.util.List;
 
 @Service
 public class AuthService {
@@ -25,50 +21,17 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
-    private final UserService userService;
-    private final RoleRepository roleRepository;
-    private final EmailService emailService;
 
     public AuthService(
             UserRepository userRepository,
             PasswordEncoder passwordEncoder,
             JwtService jwtService,
-            AuthenticationManager authenticationManager,
-            UserService userService,
-            RoleRepository roleRepository,
-            EmailService emailService
+            AuthenticationManager authenticationManager
     ) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.authenticationManager = authenticationManager;
-        this.userService = userService;
-        this.roleRepository = roleRepository;
-        this.emailService = emailService;
-    }
-
-    public AuthResponse register(RegisterRequest request) {
-        if (userService.existsByUsername(request.getUsername()))
-            throw new UsernameIsTakenException("This username is taken.");
-
-        if (userService.existsByEmail(request.getEmail()))
-            throw new UserAlreadyExistsException("User with this email already exists.");
-
-        UserEntity user = new UserEntity();
-        user.setEmail(request.getEmail());
-        user.setUsername(request.getUsername());
-        user.setRoles(List.of(roleRepository.findByName("USER")));
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
-
-        UserEntity savedUser = userRepository.save(user);
-
-        String jwtToken = jwtService.generateToken(savedUser.getUsername());
-        String refreshToken = jwtService.generateRefreshToken(savedUser.getUsername());
-        Cookie cookie = jwtService.createCookie(refreshToken);
-
-        emailService.sendWelcomeEmail(savedUser.getEmail());
-
-        return new AuthResponse(jwtToken, cookie);
     }
 
     public AuthResponse authenticate(AuthRequest request) {

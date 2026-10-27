@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.List;
 
 @RestController
@@ -24,19 +25,6 @@ public class IncomeController {
         this.incomeService = incomeService;
     }
 
-    @Operation(
-            summary = "Retrieve a list of all incomes"
-    )
-    @GetMapping("/")
-    public ResponseEntity<List<IncomeDto>> getIncomes() {
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(incomeService
-                        .getAllIncomes()
-                        .stream()
-                        .map(IncomeDto::from)
-                        .toList());
-    }
 
     @Operation(
             summary = "Retrieve a single income by its unique slug field"
@@ -51,29 +39,29 @@ public class IncomeController {
     }
 
     @Operation(
-            summary = "Retrieve a list of user incomes by username and optional year and month"
+            summary = "Retrieve a list of user incomes and optional year and month"
     )
-    @GetMapping("/users/{username}")
+    @GetMapping("/")
     public ResponseEntity<List<IncomeDto>> getUserIncomes(
-            @PathVariable String username,
+            Principal principal,
             @RequestParam(required = false) Integer year,
             @RequestParam(required = false) Integer month
     ) {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(incomeService
-                        .getAllUserIncomes(username, year, month)
+                        .getAllUserIncomes(principal.getName(), year, month)
                         .stream()
                         .map(IncomeDto::from)
                         .toList());
     }
 
     @Operation(
-            summary = "Retrieve a list of user incomes with pagination and sorting by username"
+            summary = "Retrieve a list of user incomes with pagination and sorting"
     )
-    @GetMapping("/pages/users/{username}")
+    @GetMapping("/pages")
     public ResponseEntity<Page<IncomeDto>> getPageOfUserIncomes(
-            @PathVariable String username,
+            Principal principal,
             @RequestParam(defaultValue = "0") @Min(0) Integer pageNumber,
             @RequestParam(defaultValue = "10") @Min(1) Integer pageSize,
             @RequestParam(defaultValue = "DESC") Sort.Direction sortDirection,
@@ -90,21 +78,21 @@ public class IncomeController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(incomeService
-                        .findAllIncomesByUserId(username, incomesPage, year, month)
+                        .findAllIncomesByUserId(principal.getName(), incomesPage, year, month)
                         .map(IncomeDto::from));
     }
 
     @Operation(
             summary = "Create a new income"
     )
-    @PostMapping("/users/{username}")
+    @PostMapping("/")
     public ResponseEntity<IncomeDto> addIncome(
             @RequestBody @Valid Income income,
-            @PathVariable String username
+            Principal principal
     ) {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(IncomeDto.from(incomeService.saveIncome(income, username)));
+                .body(IncomeDto.from(incomeService.saveIncome(income, principal.getName())));
     }
 
     @Operation(
@@ -134,21 +122,21 @@ public class IncomeController {
     @Operation(
             summary = "Retrieve a list of income years"
     )
-    @GetMapping("/users/{username}/years")
+    @GetMapping("/years")
     public ResponseEntity<List<Integer>> getYears(
-            @PathVariable String username,
+            Principal principal,
             @RequestParam(required = false) boolean yearLimit
     ) {
-        return ResponseEntity.ok(incomeService.getYears(username, yearLimit));
+        return ResponseEntity.ok(incomeService.getYears(principal.getName(), yearLimit));
     }
 
     @Operation(
             summary = "Retrieve a single user's last added income."
     )
-    @GetMapping("/users/{username}/last-added")
+    @GetMapping("/last-added")
     public ResponseEntity<IncomeDto> getLastUserIncome(
-            @PathVariable String username
+            Principal principal
     ) {
-        return ResponseEntity.ok(incomeService.getLastUserIncome(username));
+        return ResponseEntity.ok(incomeService.getLastUserIncome(principal.getName()));
     }
 }

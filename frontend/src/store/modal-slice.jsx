@@ -19,9 +19,6 @@ const modalSlice = createSlice({
     showUpdateInfo(state) {
       state.modalVersion = "updateInfo";
     },
-    showUserUpdateInfo(state) {
-      state.modalVersion = "userUpdateInfo";
-    },
     showSessionExpiredInfo(state) {
       state.modalVersion = "sessionExpired";
     },
@@ -30,9 +27,6 @@ const modalSlice = createSlice({
     },
     loginInfoModal(state) {
       state.modalVersion = "loginInfo";
-    },
-    signupInfoModal(state) {
-      state.modalVersion = "signupInfo";
     },
     closeModal(state) {
       state.modalVersion = "";

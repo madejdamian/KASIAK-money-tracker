@@ -5,28 +5,11 @@ function ProtectedRoute() {
   const token = localStorage.getItem("token");
   const location = useLocation();
 
-  if (
-    token &&
-    (location.pathname === "/login" || location.pathname === "/signup")
-  ) {
+  if (token && location.pathname === "/login") {
     return <Navigate to={"/"} replace />;
   }
 
-  if (
-    !token &&
-    (location.pathname === "/login" ||
-      location.pathname === "/signup" ||
-      location.pathname === "/forgot-password" ||
-      location.pathname === "/reset-password")
-  ) {
-    return <Outlet />;
-  }
-
-  if (
-    !token &&
-    location.pathname !== "/login" &&
-    location.pathname !== "/signup"
-  ) {
+  if (!token && location.pathname !== "/login") {
     return <Navigate to="/login" replace />;
   }
 

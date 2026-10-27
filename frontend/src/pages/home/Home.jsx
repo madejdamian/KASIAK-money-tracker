@@ -20,14 +20,12 @@ import { useDispatch, useSelector } from "react-redux";
 import { modalActions } from "../../store/modal-slice";
 import LoginInfoModal from "../../components/modal/LoginInfoModal";
 import { authActions } from "../../store/auth-slice";
-import SignupInfoModal from "../../components/modal/SignupInfoModal";
 
 const Home = () => {
   const dispatch = useDispatch();
   const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
   const version = useSelector((state) => state.modal.modalVersion);
   const [loginCounter, setLoginCounter] = useState(-1);
-  const [signupCounter, setSignupCounter] = useState(-1);
   const navigate = useNavigate();
 
   // useEffect(() => {
@@ -46,11 +44,6 @@ const Home = () => {
     dispatch(modalActions.loginInfoModal());
   };
 
-  const handleSignupClickCounter = () => {
-    setSignupCounter((prev) => prev + 1);
-    dispatch(modalActions.signupInfoModal());
-  };
-
   if (loginCounter > 7) {
     localStorage.removeItem("bg");
     localStorage.removeItem("token");
@@ -59,17 +52,8 @@ const Home = () => {
     setLoginCounter(-1);
   }
 
-  if (signupCounter > 7) {
-    localStorage.removeItem("bg");
-    localStorage.removeItem("token");
-    dispatch(authActions.logout());
-    navigate("/signup");
-    setLoginCounter(-1);
-  }
-
   return (
     <>
-      <SignupInfoModal signupCounter={signupCounter} version={version} />
       <LoginInfoModal loginCounter={loginCounter} version={version} />
       <header className="w-full h-screen overflow-x-hidden">
         <img
@@ -236,10 +220,10 @@ const Home = () => {
           <div className="w-4/5 flex flex-col xlg:flex-row gap-4 mx-auto">
             <div className="flex flex-col w-[95%] mx-auto gap-4 bg-main rounded-3xl p-4">
               <span className="text-lg font-semibold text-orange-600 px-4 mt-4">
-                1. Create Account or login
+                1. Login
               </span>
               <p className="p-4">
-                Create an account or log in to an already created one by filling
+                Log in to the household account by filling
                 out the form and providing the data you will use when using the
                 application
               </p>
@@ -293,22 +277,6 @@ const Home = () => {
             to={"login"}
           >
             Login
-          </Link>
-        )}{" "}
-        or{" "}
-        {isAuthenticated ? (
-          <button
-            onClick={handleSignupClickCounter}
-            className="text-orange-600 hover:text-orange-800 transition-all duration-300"
-          >
-            Create Account
-          </button>
-        ) : (
-          <Link
-            className="text-orange-600 hover:text-orange-800 transition-all duration-300"
-            to={"signup"}
-          >
-            Create Account
           </Link>
         )}
       </p>

@@ -7,14 +7,10 @@ import Expenses from "./pages/expenses/Expenses";
 import Summaries from "./pages/summaries/Summaries";
 import Login from "./pages/login/Login";
 import "./App.css";
-import Signup from "./pages/signup/Signup";
 import ErrorBoundary from "./components/error/ErrorBoundary";
 import TransactionElement from "./pages/transactionElement/TransactionElement";
 import AllTransactions from "./pages/allTransactions/AllTransactions";
-import Settings from "./pages/settings/Settings";
 import ProtectedRoute from "./components/protectedRoutes/ProtectedRoute";
-import ForgotPassword from "./pages/forgotPassword/ForgotPassword";
-import ResetPassword from "./pages/resetPassword/ResetPassword";
 
 const router = createBrowserRouter([
   {
@@ -46,11 +42,7 @@ const router = createBrowserRouter([
             element: <TransactionElement />,
           },
           { path: "summaries", element: <Summaries /> },
-          { path: "settings", element: <Settings /> },
           { path: "login", element: <Login /> },
-          { path: "forgot-password", element: <ForgotPassword /> },
-          { path: "reset-password", element: <ResetPassword/> },
-          { path: "signup", element: <Signup /> },
         ],
       },
     ],

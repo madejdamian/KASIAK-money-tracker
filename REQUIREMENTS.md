@@ -45,6 +45,8 @@ _Do uzupełnienia._
 - Kategorie mają dowolną głębokość zagnieżdżenia, np. rachunki -> media -> prąd.
 - Kategoria może mieć dodatkowo wpisywane zużycie (np. kWh dla prądu) obok kwoty.
 - Brak rozliczeń między domownikami (kto komu jest winien). Jeśli ktoś zapłaci prywatną kartą i zwróci sobie z konta wspólnego, zmienia w wydatku rodzaj płatności na wspólną.
+- Uproszczenie istniejącego kodu: rezygnujemy z rejestracji, resetu hasła mailem i zdjęcia profilu (jedno wspólne konto).
+- Dane testowe z `data.sql` (losowe wydatki i przychody dla `admin`) do usunięcia.
 - Poza zakresem: historia zmian wydatków, automatyczny koszt jednostkowy (zł/kWh), załączniki (paragony), eksport/import CSV, powiadomienia, cele oszczędnościowe, wiele walut.
 
 ## Wymagania niefunkcjonalne

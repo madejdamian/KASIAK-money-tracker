@@ -63,8 +63,39 @@ _Do uzupełnienia (konwencje, biblioteki, struktura kodu)._
 
 ## Analiza istniejącego kodu
 
-_Do wypełnienia po zebraniu wymagań: co już jest w aplikacji, czego brakuje._
+Stan na dzień analizy (kod pochodzi z gotowego projektu).
+
+**Stack:** backend Java 17 + Spring Boot (JPA, Flyway, JWT, Swagger), PostgreSQL, frontend React + Vite + Tailwind + Redux Toolkit + TanStack Query + Chart.js, Docker Compose.
+
+**Co jest:** osobne encje `Expense` i `Income` (tytuł, kwota, data, opis, kategoria jako enum, użytkownik), CRUD z paginacją i filtrem rok/miesiąc, logowanie i rejestracja (JWT), reset hasła mailem, zdjęcie profilu, dashboard z wykresami (doughnut, bar, line), lista transakcji, testy jednostkowe serwisów.
+
+**Czego brakuje (najważniejsze):** model jest jednoosobowy (każdy użytkownik ma własne wydatki i przychody), kategorie to płaski, sztywny enum, a w aplikacji nie ma pojęcia budżetu domowego, miesięcy ani PWA.
 
 | Wymaganie | Status | Uwagi |
 |-----------|--------|-------|
-|           |        |       |
+| Dodawanie / edycja / usuwanie wydatków | Jest | `ExpenseController`, CRUD po `slug`; trzeba rozszerzyć o kartę, domownika i zużycie |
+| Wpłaty do budżetu (przychody) | Częściowo | Jest `Income`, ale per użytkownik i z kategoriami typu SALARY/SELL; brak wpłat na wspólne konto, brak pola „od kogo”, brak wpłat extra |
+| Jedno wspólne konto / budżet domowy | Brak | Dane są przypisane do `UserEntity`; potrzebna encja budżetu/gospodarstwa lub uproszczenie do jednego konta |
+| Domownicy | Brak | Jest tylko `UserEntity` (login, e-mail, hasło); potrzebna lista domowników bez osobnych kont |
+| Karta prywatna / wspólna | Brak | Brak pola rodzaju płatności w `ExpenseEntity` |
+| Kategorie hierarchiczne, dowolna głębokość | Brak | `ExpenseCategory` to enum (FOOD, HOUSE, ...); potrzebna tabela kategorii z `parent_id` i migracja Flyway |
+| Przełączanie szczegółowości kategorii | Brak | Zależy od hierarchii kategorii |
+| Zużycie przy wydatku (np. kWh) | Brak | Brak pola w encji i formularzu |
+| Wydatki cykliczne | Brak | W `Summaries.jsx` jest tylko zakomentowana makieta „Schedules”, bez backendu |
+| Miesięczny budżet z przenoszeniem dodatniego salda | Brak | Jest filtr rok/miesiąc, ale nie ma logiki salda i okresów rozliczeniowych |
+| Podsumowanie miesiąca | Częściowo | Dashboard pokazuje wartości i wykresy; trzeba sprawdzić, jak liczy saldo |
+| Drill-down po poziomach kategorii | Brak | Wykresy działają na płaskich kategoriach |
+| Wykresy i trendy miesięczne | Częściowo | Są `DoughnutChart`, `BarChart`, `LineChart`; do dostosowania do nowego modelu |
+| Porównanie miesiąc do miesiąca, zużycia | Brak | |
+| Wyszukiwanie i filtry | Częściowo | Jest tylko filtr rok/miesiąc i sortowanie; brak filtrów po kategorii, karcie, domowniku, kwocie, tekście |
+| Szablony / ostatnie wydatki | Częściowo | Jest endpoint `last-added` i komponent `LatestAdded`; brak szablonów |
+| Tagi | Brak | |
+| PWA | Brak | Brak manifestu, service workera i wtyczki PWA w Vite |
+| UI mobile-first | Częściowo | Widoki mają klasy responsywne (Tailwind), ale to układ desktop-first i trzeba go przejrzeć pod telefon |
+| Logowanie, reset hasła, profil | Jest | Przy jednym wspólnym koncie część (rejestracja, reset hasła, zdjęcie) może być zbędna; do decyzji |
+
+### Uwagi do decyzji
+- Dane startowe `data.sql` generują losowe wydatki i przychody dla użytkownika `admin`; do usunięcia lub zmiany.
+- `Summaries.jsx` to wyłącznie makieta („Section in progress”), czyli miejsce na przyszłe podsumowania.
+- Kategorie trzeba przenieść z enumów do bazy (tabela + migracja), bo od tego zależą hierarchia, drill-down i wykresy.
+- Endpointy mają `username` w ścieżce; przy jednym wspólnym koncie można to uprościć.

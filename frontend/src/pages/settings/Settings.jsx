@@ -1,5 +1,5 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Card,
@@ -36,6 +36,24 @@ const Settings = () => {
 
       <div className="px-4 flex flex-col gap-4 mt-2">
         <ErrorText>{membersQuery.error ?? categoriesQuery.error}</ErrorText>
+
+        <Card>
+          <h2 className="font-semibold mb-2">Automatyzacja</h2>
+          <ul className="flex flex-col">
+            {[
+              ["/recurring", "Wydatki cykliczne", "czynsz, kredyt, abonamenty"],
+              ["/templates", "Szablony", "szybkie dodawanie częstych zakupów"],
+              ["/tags", "Tagi", "np. wakacje, remont"],
+            ].map(([to, label, hint]) => (
+              <li key={to} className="border-b border-neutral-800 last:border-b-0">
+                <Link to={to} className="block py-3">
+                  {label}
+                  <span className="block text-sm text-neutral-500">{hint}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </Card>
 
         <Card>
           <h2 className="font-semibold mb-3">Domownicy</h2>

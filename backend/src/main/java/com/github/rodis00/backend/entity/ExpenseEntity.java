@@ -6,6 +6,8 @@ import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Getter
@@ -47,4 +49,14 @@ public class ExpenseEntity extends BaseEntity {
 
     // consumption connected with this expense, in the unit of the category (e.g. kWh)
     private BigDecimal usageAmount;
+
+    @ManyToMany
+    @JoinTable(
+            name = "expense_tag",
+            schema = "expense_tracker",
+            joinColumns = @JoinColumn(name = "expense_id"),
+            inverseJoinColumns = @JoinColumn(name = "tag_id")
+    )
+    @Builder.Default
+    private Set<TagEntity> tags = new HashSet<>();
 }

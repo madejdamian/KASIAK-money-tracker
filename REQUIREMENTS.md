@@ -86,15 +86,15 @@ Stan na dzień analizy (kod pochodzi z gotowego projektu).
 | Kategorie hierarchiczne, dowolna głębokość | Backend gotowy | Tabela `category` z `parent_id`, API `/categories` (drzewo, dodawanie, przenoszenie, usuwanie), migracja V23 z przykładowymi kategoriami. Frontend: etap 4 |
 | Przełączanie szczegółowości kategorii | Jest (bez uruchomienia) | Widok „Drzewo” oraz płaskie widoki „Poz. 1/2/3” z zsumowaniem głębszych kategorii |
 | Zużycie przy wydatku (np. kWh) | Backend gotowy | Pole `usageAmount` w wydatku i jednostka `unit` w kategorii. Frontend: etap 4 |
-| Wydatki cykliczne | Brak | W `Summaries.jsx` jest tylko zakomentowana makieta „Schedules”, bez backendu |
+| Wydatki cykliczne | Jest (bez uruchomienia) | Reguły (`/recurring`): co miesiąc propozycja do potwierdzenia ze zmianą kwoty/zużycia lub pominięciem; niepotwierdzone miesiące czekają do roku wstecz |
 | Miesięczny budżet z przenoszeniem dodatniego salda | Backend gotowy | `GET /budget/summary?year=&month=`: saldo z poprzedniego miesiąca (tylko dodatnie) + wpłaty (miesięczne i extra, per domownik) - wydatki ze wspólnej karty. Frontend: etap 4 |
 | Podsumowanie miesiąca | Backend gotowy | Dane z `/budget/summary`; ekran w etapie 4 (dashboard liczy saldo po staremu) |
 | Drill-down po poziomach kategorii | Jest (bez uruchomienia) | Ekran „Analizy”: drzewo z klikaniem w głąb i ścieżką, sumy z podkategoriami i udział % |
 | Wykresy i trendy miesięczne | Jest (bez uruchomienia) | Paski wydatków za ostatnie 12 miesięcy, dla całości lub otwartej kategorii; stare wykresy Chart.js usunięte |
 | Porównanie miesiąc do miesiąca, zużycia | Jest (bez uruchomienia) | Porównanie z poprzednim miesiącem i rokiem wcześniej, największe zmiany kategorii, trend zużycia (np. kWh) |
 | Wyszukiwanie i filtry | Jest (bez uruchomienia) | Lista wydatków: szukanie tekstu oraz filtry po kategorii (z podkategoriami), domowniku, karcie i kwocie |
-| Szablony / ostatnie wydatki | Częściowo | Jest endpoint `last-added` i komponent `LatestAdded`; brak szablonów |
-| Tagi | Brak | |
+| Szablony / ostatnie wydatki | Jest (bez uruchomienia) | Szablony (`/templates`) jako przyciski szybkiego dodawania z cofnięciem, „Zapisz jako szablon” i „Kopiuj jako nowy” w formularzu wydatku |
+| Tagi | Jest (bez uruchomienia) | Tagi w wydatku (po przecinku), filtr po tagu, ekran „Tagi” z sumą projektu i podziałem na kategorie |
 | PWA | Brak | Brak manifestu, service workera i wtyczki PWA w Vite |
 | UI mobile-first | Częściowo | Widoki mają klasy responsywne (Tailwind), ale to układ desktop-first i trzeba go przejrzeć pod telefon |
 | Logowanie | Jest | Zostaje jedno wspólne konto (JWT). Rejestracja, reset hasła, e-mail, zdjęcie profilu i ustawienia usunięte w etapie 1 |
@@ -123,3 +123,10 @@ Stan na dzień analizy (kod pochodzi z gotowego projektu).
 - Nowy ekran „Analizy” (piąta zakładka): sumy miesiąca z porównaniem do poprzedniego miesiąca i roku wcześniej, wydatki wg kategorii (drzewo lub poziomy), największe zmiany, trend z ostatnich 12 miesięcy oraz trend zużycia po otwarciu kategorii z jednostką (np. Prąd). Widok można zawęzić do karty wspólnej lub prywatnej.
 - Obliczenia są w czystych funkcjach (`frontend/src/util/analysis.js`, `filters.js`) z testami `npm test` (13 testów przechodzi lokalnie na Node). Same ekrany nie były uruchamiane.
 - Filtry w liście wydatków działają po stronie przeglądarki na danych wybranego miesiąca.
+
+### Etap 6 (cykliczne, szablony, tagi) - stan
+- Backend: migracja V24 (tagi, reguły cykliczne z historią potwierdzeń, szablony), API `/recurring`, `/templates`, `/tags`; kategoria lub domownik użyty w regule albo szablonie nie da się usunąć.
+- Wydatek z reguły dostaje datę z dnia miesiąca ustawionego w regule (w krótszych miesiącach skrócony), a po potwierdzeniu liczy się do budżetu jak zwykły wydatek.
+- Frontend: ekrany Cykliczne, Szablony, Tagi, szybkie dodawanie na liście wydatków, karta „do potwierdzenia” na ekranie Budżet, odnośniki w Ustawieniach.
+- Tagi nie są jeszcze dostępne w regułach i szablonach (tylko w zwykłych wydatkach).
+- Nic z tego nie zostało zbudowane ani uruchomione (brak dostępu do Mavena i npm); logika analiz po stronie przeglądarki ma testy (`npm test`), testy backendu napisane, ale niesprawdzone.

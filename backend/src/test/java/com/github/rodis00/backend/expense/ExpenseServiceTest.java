@@ -8,6 +8,7 @@ import com.github.rodis00.backend.entity.UserEntity;
 import com.github.rodis00.backend.exception.EntityNotFoundException;
 import com.github.rodis00.backend.member.MemberService;
 import com.github.rodis00.backend.page.GlobalPage;
+import com.github.rodis00.backend.tag.TagService;
 import com.github.rodis00.backend.user.UserService;
 import com.github.rodis00.backend.utils.TitleFormatter;
 import com.github.rodis00.backend.validators.DateValidator;
@@ -42,6 +43,9 @@ class ExpenseServiceTest {
 
     @Mock
     private MemberService memberService;
+
+    @Mock
+    private TagService tagService;
 
     @Mock
     private DateValidator dateValidator;

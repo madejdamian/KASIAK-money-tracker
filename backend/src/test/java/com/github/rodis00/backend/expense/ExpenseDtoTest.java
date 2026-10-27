@@ -3,12 +3,14 @@ package com.github.rodis00.backend.expense;
 import com.github.rodis00.backend.entity.CategoryEntity;
 import com.github.rodis00.backend.entity.ExpenseEntity;
 import com.github.rodis00.backend.entity.HouseholdMemberEntity;
+import com.github.rodis00.backend.entity.TagEntity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -44,6 +46,11 @@ class ExpenseDtoTest {
         expense.setMember(member);
         expense.setPaymentSource(PaymentSource.SHARED_CARD);
         expense.setUsageAmount(new BigDecimal("150.500"));
+        TagEntity tagB = new TagEntity();
+        tagB.setName("remont");
+        TagEntity tagA = new TagEntity();
+        tagA.setName("dom");
+        expense.setTags(Set.of(tagB, tagA));
         expense.setCreatedAt(now);
         expense.setUpdatedAt(now);
         expense.setDescription("expense");
@@ -65,7 +72,8 @@ class ExpenseDtoTest {
                 expense.getUsageAmount(),
                 expense.getCreatedAt(),
                 expense.getUpdatedAt(),
-                expense.getDescription()
+                expense.getDescription(),
+                List.of("dom", "remont")
         );
 
         ExpenseDto expenseDto = ExpenseDto.from(expense);
@@ -85,5 +93,6 @@ class ExpenseDtoTest {
         assertEquals(expectedDto.getCreatedAt(), expenseDto.getCreatedAt());
         assertEquals(expectedDto.getUpdatedAt(), expenseDto.getUpdatedAt());
         assertEquals(expectedDto.getDescription(), expenseDto.getDescription());
+        assertEquals(expectedDto.getTags(), expenseDto.getTags());
     }
 }

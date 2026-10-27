@@ -4,6 +4,8 @@ import com.github.rodis00.backend.entity.CategoryEntity;
 import com.github.rodis00.backend.exception.EntityNotFoundException;
 import com.github.rodis00.backend.exception.InvalidRequestException;
 import com.github.rodis00.backend.expense.ExpenseRepository;
+import com.github.rodis00.backend.recurring.RecurringExpenseRepository;
+import com.github.rodis00.backend.template.ExpenseTemplateRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -26,6 +28,12 @@ class CategoryServiceTest {
 
     @Mock
     private ExpenseRepository expenseRepository;
+
+    @Mock
+    private RecurringExpenseRepository recurringRepository;
+
+    @Mock
+    private ExpenseTemplateRepository templateRepository;
 
     @InjectMocks
     private CategoryService categoryService;
@@ -178,6 +186,20 @@ class CategoryServiceTest {
 
         when(categoryRepository.findById(1L)).thenReturn(Optional.of(bills));
         when(categoryRepository.existsByParentId(1L)).thenReturn(true);
+
+        assertThrows(InvalidRequestException.class, () -> categoryService.deleteCategory(1L));
+
+        verify(categoryRepository, never()).delete(any());
+    }
+
+    @Test
+    void shouldNotDeleteCategoryUsedByRecurringExpense() {
+        CategoryEntity rent = category(1L, "Rent", null);
+
+        when(categoryRepository.findById(1L)).thenReturn(Optional.of(rent));
+        when(categoryRepository.existsByParentId(1L)).thenReturn(false);
+        when(expenseRepository.existsByCategoryId(1L)).thenReturn(false);
+        when(recurringRepository.existsByCategoryId(1L)).thenReturn(true);
 
         assertThrows(InvalidRequestException.class, () -> categoryService.deleteCategory(1L));
 

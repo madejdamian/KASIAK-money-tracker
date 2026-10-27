@@ -5,6 +5,7 @@ export const emptyFilters = {
   categoryId: "",
   memberId: "",
   source: "",
+  tag: "",
   min: "",
   max: "",
 };
@@ -14,7 +15,7 @@ export function hasActiveFilters(filters) {
 }
 
 // Filters the expenses of a month by text, category (with everything below it), member,
-// card and amount range. `index` comes from buildCategoryIndex.
+// card, tag and amount range. `index` comes from buildCategoryIndex.
 export function applyExpenseFilters(expenses, index, filters) {
   const text = filters.text.trim().toLowerCase();
   const min = filters.min === "" ? null : Number(filters.min);
@@ -28,6 +29,7 @@ export function applyExpenseFilters(expenses, index, filters) {
         expense.description,
         expense.memberName,
         ...(expense.categoryPath ?? []),
+        ...(expense.tags ?? []),
       ]
         .filter(Boolean)
         .join(" ")
@@ -41,6 +43,9 @@ export function applyExpenseFilters(expenses, index, filters) {
       return false;
     }
     if (filters.source !== "" && expense.paymentSource !== filters.source) {
+      return false;
+    }
+    if (filters.tag !== "" && !(expense.tags ?? []).includes(filters.tag)) {
       return false;
     }
     const price = Number(expense.price);

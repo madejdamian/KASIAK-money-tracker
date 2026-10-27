@@ -203,3 +203,19 @@ export function biggestChanges(currentExpenses, previousExpenses, index, depth, 
     .sort((a, b) => Math.abs(b.diff) - Math.abs(a.diff))
     .slice(0, limit);
 }
+
+export function expensesWithTag(expenses, tag) {
+  return expenses.filter((expense) => (expense.tags ?? []).includes(tag));
+}
+
+// Totals per tag over the given expenses, biggest first. An expense with several tags is
+// counted under each of them, so the totals can add up to more than the overall sum.
+export function tagTotals(expenses) {
+  const groups = new Map();
+  for (const expense of expenses) {
+    for (const tag of expense.tags ?? []) {
+      addToGroup(groups, tag, expense);
+    }
+  }
+  return groupsToItems(groups, (tag) => tag);
+}

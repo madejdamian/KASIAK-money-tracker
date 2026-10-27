@@ -6,6 +6,7 @@ import com.github.rodis00.backend.entity.UserEntity;
 import com.github.rodis00.backend.exception.EntityNotFoundException;
 import com.github.rodis00.backend.member.MemberService;
 import com.github.rodis00.backend.page.GlobalPage;
+import com.github.rodis00.backend.tag.TagService;
 import com.github.rodis00.backend.user.UserService;
 import com.github.rodis00.backend.utils.TitleFormatter;
 import com.github.rodis00.backend.validators.DateValidator;
@@ -28,6 +29,7 @@ public class ExpenseService {
     private final UserService userService;
     private final CategoryService categoryService;
     private final MemberService memberService;
+    private final TagService tagService;
     private final ExpenseSearchDao expenseSearchDao;
     private final DateValidator dateValidator;
 
@@ -36,6 +38,7 @@ public class ExpenseService {
             UserService userService,
             CategoryService categoryService,
             MemberService memberService,
+            TagService tagService,
             ExpenseSearchDao expenseSearchDao,
             DateValidator dateValidator
     ) {
@@ -43,6 +46,7 @@ public class ExpenseService {
         this.userService = userService;
         this.categoryService = categoryService;
         this.memberService = memberService;
+        this.tagService = tagService;
         this.expenseSearchDao = expenseSearchDao;
         this.dateValidator = dateValidator;
     }
@@ -66,6 +70,7 @@ public class ExpenseService {
                         .member(memberService.getMember(expense.getMemberId()))
                         .paymentSource(expense.getPaymentSource())
                         .usageAmount(expense.getUsageAmount())
+                        .tags(tagService.resolve(expense.getTags()))
                         .build()
         );
     }
@@ -95,6 +100,7 @@ public class ExpenseService {
         actualExpense.setMember(memberService.getMember(expense.getMemberId()));
         actualExpense.setPaymentSource(expense.getPaymentSource());
         actualExpense.setUsageAmount(expense.getUsageAmount());
+        actualExpense.setTags(tagService.resolve(expense.getTags()));
         expenseRepository.save(actualExpense);
 
         return actualExpense;

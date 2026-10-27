@@ -4,6 +4,8 @@ import com.github.rodis00.backend.entity.CategoryEntity;
 import com.github.rodis00.backend.exception.EntityNotFoundException;
 import com.github.rodis00.backend.exception.InvalidRequestException;
 import com.github.rodis00.backend.expense.ExpenseRepository;
+import com.github.rodis00.backend.recurring.RecurringExpenseRepository;
+import com.github.rodis00.backend.template.ExpenseTemplateRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -17,13 +19,19 @@ public class CategoryService {
 
     private final CategoryRepository categoryRepository;
     private final ExpenseRepository expenseRepository;
+    private final RecurringExpenseRepository recurringRepository;
+    private final ExpenseTemplateRepository templateRepository;
 
     public CategoryService(
             CategoryRepository categoryRepository,
-            ExpenseRepository expenseRepository
+            ExpenseRepository expenseRepository,
+            RecurringExpenseRepository recurringRepository,
+            ExpenseTemplateRepository templateRepository
     ) {
         this.categoryRepository = categoryRepository;
         this.expenseRepository = expenseRepository;
+        this.recurringRepository = recurringRepository;
+        this.templateRepository = templateRepository;
     }
 
     public CategoryEntity getCategory(Long id) {
@@ -94,6 +102,9 @@ public class CategoryService {
         }
         if (expenseRepository.existsByCategoryId(id)) {
             throw new InvalidRequestException("Category has expenses and cannot be deleted.");
+        }
+        if (recurringRepository.existsByCategoryId(id) || templateRepository.existsByCategoryId(id)) {
+            throw new InvalidRequestException("Category is used by a recurring expense or template and cannot be deleted.");
         }
 
         categoryRepository.delete(category);

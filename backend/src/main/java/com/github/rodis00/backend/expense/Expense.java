@@ -8,6 +8,7 @@ import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Setter
@@ -40,4 +41,7 @@ public class Expense {
 
 
     private String description;
+
+    // free-form labels independent of categories, e.g. "wakacje"; created on first use
+    private List<String> tags;
 }

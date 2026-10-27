@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { useQueries, useQuery } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
 import MonthSwitcher from "../../components/ui/MonthSwitcher";
 import { Card, ErrorText, PageHeader, Segmented } from "../../components/ui/ui";
 import CategoryBreakdown from "../../components/analysis/CategoryBreakdown";
@@ -178,6 +179,13 @@ const Analysis = () => {
                 </p>
               )}
             </Card>
+
+            <Link to="/tags" className="block bg-thirdColor rounded-2xl p-4">
+              Analiza tagów (projekty, np. wakacje, remont)
+              <span className="block text-sm text-neutral-500">
+                Ile kosztował cały projekt, w podziale na kategorie.
+              </span>
+            </Link>
           </>
         )}
       </div>

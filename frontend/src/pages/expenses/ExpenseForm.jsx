@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ErrorText,
@@ -13,6 +13,8 @@ import {
 } from "../../components/ui/ui";
 import { fetchCategoryTree } from "../../http/categories";
 import { fetchMembers } from "../../http/members";
+import { fetchTags } from "../../http/tags";
+import { createTemplate } from "../../http/templates";
 import {
   createExpense,
   deleteExpense,
@@ -32,17 +34,20 @@ const cardOptions = [
   { value: "PRIVATE_CARD", label: "Karta prywatna" },
 ];
 
-function initialForm(expense, categories, members) {
-  if (expense) {
+// `source` is the expense being edited, or one being copied (then the date starts as now)
+function initialForm(source, categories, members, keepDate) {
+  if (source) {
+    const expense = source;
     return {
       title: expense.title,
       price: String(expense.price),
-      date: fromApiDateTime(expense.date),
+      date: keepDate ? fromApiDateTime(expense.date) : toInputDateTime(),
       categoryId: expense.categoryId == null ? "" : String(expense.categoryId),
       memberId: expense.memberId == null ? "" : String(expense.memberId),
       paymentSource: expense.paymentSource ?? "SHARED_CARD",
       usageAmount: expense.usageAmount == null ? "" : String(expense.usageAmount),
       description: expense.description ?? "",
+      tags: (expense.tags ?? []).join(", "),
     };
   }
 
@@ -60,14 +65,18 @@ function initialForm(expense, categories, members) {
     paymentSource: recallChoice("paymentSource") || "SHARED_CARD",
     usageAmount: "",
     description: "",
+    tags: "",
   };
 }
 
-const ExpenseEditor = ({ expense, categories, members }) => {
+const ExpenseEditor = ({ expense, prefill, categories, members, knownTags }) => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const isNew = !expense;
-  const [form, setForm] = useState(() => initialForm(expense, categories, members));
+  const [form, setForm] = useState(() =>
+    initialForm(expense ?? prefill, categories, members, !!expense)
+  );
+  const [templateSaved, setTemplateSaved] = useState(false);
 
   const selectedCategory = categories.find((c) => String(c.id) === form.categoryId);
 
@@ -79,6 +88,7 @@ const ExpenseEditor = ({ expense, categories, members }) => {
     queryClient.invalidateQueries({ queryKey: ["expenses"] });
     queryClient.invalidateQueries({ queryKey: ["expense"] });
     queryClient.invalidateQueries({ queryKey: ["budget"] });
+    queryClient.invalidateQueries({ queryKey: ["tags"] });
     navigate(`/expenses?month=${form.date.slice(0, 7)}`);
   }
 
@@ -98,6 +108,30 @@ const ExpenseEditor = ({ expense, categories, members }) => {
     onSuccess: finish,
   });
 
+  const tagNames = form.tags
+    .split(",")
+    .map((tag) => tag.trim())
+    .filter(Boolean);
+
+  const saveTemplate = useMutation({
+    mutationFn: createTemplate,
+    onSuccess: () => setTemplateSaved(true),
+  });
+
+  function handleSaveTemplate() {
+    setTemplateSaved(false);
+    saveTemplate.mutate({
+      name: form.title.trim() || selectedCategory?.name || "Szablon",
+      title: form.title.trim() || null,
+      price: form.price === "" ? null : Number(form.price),
+      categoryId: Number(form.categoryId),
+      memberId: Number(form.memberId),
+      paymentSource: form.paymentSource,
+      usageAmount: form.usageAmount === "" ? null : Number(form.usageAmount),
+      description: form.description.trim() || null,
+    });
+  }
+
   function handleSubmit(event) {
     event.preventDefault();
     save.mutate({
@@ -109,6 +143,7 @@ const ExpenseEditor = ({ expense, categories, members }) => {
       paymentSource: form.paymentSource,
       usageAmount: form.usageAmount === "" ? null : Number(form.usageAmount),
       description: form.description.trim() || null,
+      tags: tagNames,
     });
   }
 
@@ -228,12 +263,54 @@ const ExpenseEditor = ({ expense, categories, members }) => {
         />
       </Field>
 
-      <ErrorText>{save.error ?? remove.error}</ErrorText>
+      <Field label="Tagi (po przecinku, np. wakacje, remont)" htmlFor="tags">
+        <input
+          id="tags"
+          type="text"
+          list="known-tags"
+          autoCapitalize="none"
+          value={form.tags}
+          onChange={(e) => update("tags", e.target.value)}
+          className={inputClass}
+        />
+        <datalist id="known-tags">
+          {knownTags.map((tag) => (
+            <option key={tag} value={tag} />
+          ))}
+        </datalist>
+      </Field>
+
+      <ErrorText>{save.error ?? remove.error ?? saveTemplate.error}</ErrorText>
+      {templateSaved && (
+        <p className="text-sm text-emerald-400">
+          Zapisano szablon. Znajdziesz go w{" "}
+          <Link to="/templates" className="underline">
+            szablonach
+          </Link>
+          .
+        </p>
+      )}
 
       <div className="flex flex-col gap-3">
         <button type="submit" disabled={busy} className={primaryButtonClass}>
           {save.isPending ? "Zapisywanie..." : "Zapisz"}
         </button>
+        <button
+          type="button"
+          disabled={busy || saveTemplate.isPending || !form.categoryId || !form.memberId}
+          onClick={handleSaveTemplate}
+          className={secondaryButtonClass}
+        >
+          Zapisz jako szablon
+        </button>
+        {!isNew && (
+          <Link
+            to={`/expenses/new?copy=${expense.slug}`}
+            className={`${secondaryButtonClass} flex items-center justify-center`}
+          >
+            Kopiuj jako nowy
+          </Link>
+        )}
         <Link to="/expenses" className={`${secondaryButtonClass} flex items-center justify-center`}>
           Anuluj
         </Link>
@@ -249,7 +326,16 @@ const ExpenseEditor = ({ expense, categories, members }) => {
 
 const ExpenseForm = () => {
   const { slug } = useParams();
+  const [params] = useSearchParams();
   const isNew = slug === "new";
+  const copySlug = isNew ? params.get("copy") : null;
+
+  const tagsQuery = useQuery({ queryKey: ["tags"], queryFn: fetchTags });
+  const copyQuery = useQuery({
+    queryKey: ["expense", copySlug],
+    queryFn: () => fetchExpense(copySlug),
+    enabled: !!copySlug,
+  });
 
   const categoriesQuery = useQuery({ queryKey: ["categories"], queryFn: fetchCategoryTree });
   const membersQuery = useQuery({ queryKey: ["members"], queryFn: fetchMembers });
@@ -265,9 +351,13 @@ const ExpenseForm = () => {
   );
   const members = membersQuery.data ?? [];
 
-  const error = categoriesQuery.error ?? membersQuery.error ?? expenseQuery.error;
+  const error =
+    categoriesQuery.error ?? membersQuery.error ?? expenseQuery.error ?? copyQuery.error;
   const ready =
-    categoriesQuery.data && membersQuery.data && (isNew || expenseQuery.data);
+    categoriesQuery.data &&
+    membersQuery.data &&
+    (isNew || expenseQuery.data) &&
+    (!copySlug || copyQuery.data);
   const needsSetup = ready && (categories.length === 0 || members.length === 0);
 
   return (
@@ -288,10 +378,12 @@ const ExpenseForm = () => {
 
       {ready && !needsSetup && (
         <ExpenseEditor
-          key={slug}
+          key={`${slug}-${copySlug}`}
           expense={isNew ? null : expenseQuery.data}
+          prefill={copySlug ? copyQuery.data : null}
           categories={categories}
           members={members}
+          knownTags={tagsQuery.data ?? []}
         />
       )}
     </>

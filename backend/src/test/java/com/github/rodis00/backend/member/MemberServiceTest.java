@@ -5,6 +5,8 @@ import com.github.rodis00.backend.exception.EntityNotFoundException;
 import com.github.rodis00.backend.exception.InvalidRequestException;
 import com.github.rodis00.backend.expense.ExpenseRepository;
 import com.github.rodis00.backend.income.IncomeRepository;
+import com.github.rodis00.backend.recurring.RecurringExpenseRepository;
+import com.github.rodis00.backend.template.ExpenseTemplateRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -28,6 +30,12 @@ class MemberServiceTest {
 
     @Mock
     private IncomeRepository incomeRepository;
+
+    @Mock
+    private RecurringExpenseRepository recurringRepository;
+
+    @Mock
+    private ExpenseTemplateRepository templateRepository;
 
     @InjectMocks
     private MemberService memberService;
@@ -89,6 +97,21 @@ class MemberServiceTest {
         memberService.deleteMember(1L);
 
         verify(memberRepository, times(1)).delete(anna);
+    }
+
+    @Test
+    void shouldNotDeleteMemberUsedByTemplate() {
+        HouseholdMemberEntity anna = member(1L, "Anna");
+
+        when(memberRepository.findById(1L)).thenReturn(Optional.of(anna));
+        when(expenseRepository.existsByMemberId(1L)).thenReturn(false);
+        when(incomeRepository.existsByMemberId(1L)).thenReturn(false);
+        when(recurringRepository.existsByMemberId(1L)).thenReturn(false);
+        when(templateRepository.existsByMemberId(1L)).thenReturn(true);
+
+        assertThrows(InvalidRequestException.class, () -> memberService.deleteMember(1L));
+
+        verify(memberRepository, never()).delete(any());
     }
 
     @Test

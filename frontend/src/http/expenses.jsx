@@ -1,8 +1,13 @@
 import { api } from "./api";
 
-// month is optional: without it the whole year is returned
-export const fetchExpenses = ({ year, month }) =>
-  api(`/expenses/?year=${year}${month ? `&month=${month}` : ""}`);
+// year and month are optional: without them all expenses are returned
+export const fetchExpenses = ({ year, month } = {}) => {
+  const params = new URLSearchParams();
+  if (year) params.set("year", year);
+  if (month) params.set("month", month);
+  const query = params.toString();
+  return api(`/expenses/${query ? `?${query}` : ""}`);
+};
 
 export const fetchExpense = (slug) => api(`/expenses/${slug}`);
 

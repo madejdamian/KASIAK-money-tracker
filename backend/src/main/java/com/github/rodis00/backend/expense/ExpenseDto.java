@@ -2,6 +2,7 @@ package com.github.rodis00.backend.expense;
 
 import com.github.rodis00.backend.category.CategoryDto;
 import com.github.rodis00.backend.entity.ExpenseEntity;
+import com.github.rodis00.backend.entity.TagEntity;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -26,6 +27,7 @@ public class ExpenseDto {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private String description;
+    private List<String> tags;
 
     public static ExpenseDto from(ExpenseEntity expense) {
         return new ExpenseDto(
@@ -42,7 +44,10 @@ public class ExpenseDto {
                 expense.getUsageAmount(),
                 expense.getCreatedAt(),
                 expense.getUpdatedAt(),
-                expense.getDescription()
+                expense.getDescription(),
+                expense.getTags() == null
+                        ? List.of()
+                        : expense.getTags().stream().map(TagEntity::getName).sorted().toList()
         );
     }
 }

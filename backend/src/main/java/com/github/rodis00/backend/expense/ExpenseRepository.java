@@ -28,6 +28,9 @@ public interface ExpenseRepository extends JpaRepository<ExpenseEntity, Long> {
 
     Optional<ExpenseEntity> findBySlug(String slug);
 
+    @Query("select distinct t.name from ExpenseEntity e join e.tags t order by t.name")
+    List<String> findUsedTagNames();
+
     boolean existsByCategoryId(Long categoryId);
 
     boolean existsByMemberId(Long memberId);

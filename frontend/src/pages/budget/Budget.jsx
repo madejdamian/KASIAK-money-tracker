@@ -10,6 +10,7 @@ import {
   secondaryButtonClass,
 } from "../../components/ui/ui";
 import { fetchBudgetSummary } from "../../http/budget";
+import { fetchPending } from "../../http/recurring";
 import { formatMoney } from "../../util/format";
 import { useMonthParam } from "../../util/useMonthParam";
 
@@ -32,6 +33,12 @@ const Budget = () => {
     queryFn: () => fetchBudgetSummary(month),
   });
 
+  const pendingQuery = useQuery({
+    queryKey: ["recurring", "pending"],
+    queryFn: fetchPending,
+  });
+  const pendingCount = pendingQuery.data?.length ?? 0;
+
   return (
     <>
       <PageHeader title="Budżet" />
@@ -40,6 +47,15 @@ const Budget = () => {
       <div className="px-4 flex flex-col gap-4 mt-2">
         {isPending && <p className="text-neutral-400">Wczytywanie...</p>}
         <ErrorText>{error}</ErrorText>
+
+        {pendingCount > 0 && (
+          <Link
+            to="/recurring"
+            className="block rounded-2xl bg-secondColor/20 border border-secondColor p-4"
+          >
+            Wydatki cykliczne do potwierdzenia: <strong>{pendingCount}</strong>
+          </Link>
+        )}
 
         {data && (
           <>

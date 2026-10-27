@@ -5,6 +5,8 @@ import com.github.rodis00.backend.exception.EntityNotFoundException;
 import com.github.rodis00.backend.exception.InvalidRequestException;
 import com.github.rodis00.backend.expense.ExpenseRepository;
 import com.github.rodis00.backend.income.IncomeRepository;
+import com.github.rodis00.backend.recurring.RecurringExpenseRepository;
+import com.github.rodis00.backend.template.ExpenseTemplateRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -15,15 +17,21 @@ public class MemberService {
     private final MemberRepository memberRepository;
     private final ExpenseRepository expenseRepository;
     private final IncomeRepository incomeRepository;
+    private final RecurringExpenseRepository recurringRepository;
+    private final ExpenseTemplateRepository templateRepository;
 
     public MemberService(
             MemberRepository memberRepository,
             ExpenseRepository expenseRepository,
-            IncomeRepository incomeRepository
+            IncomeRepository incomeRepository,
+            RecurringExpenseRepository recurringRepository,
+            ExpenseTemplateRepository templateRepository
     ) {
         this.memberRepository = memberRepository;
         this.expenseRepository = expenseRepository;
         this.incomeRepository = incomeRepository;
+        this.recurringRepository = recurringRepository;
+        this.templateRepository = templateRepository;
     }
 
     public List<HouseholdMemberEntity> getAllMembers() {
@@ -67,6 +75,9 @@ public class MemberService {
 
         if (expenseRepository.existsByMemberId(id) || incomeRepository.existsByMemberId(id)) {
             throw new InvalidRequestException("Member has expenses or deposits and cannot be deleted.");
+        }
+        if (recurringRepository.existsByMemberId(id) || templateRepository.existsByMemberId(id)) {
+            throw new InvalidRequestException("Member is used by a recurring expense or template and cannot be deleted.");
         }
 
         memberRepository.delete(member);

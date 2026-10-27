@@ -10,8 +10,10 @@ import {
   expensesBySource,
   expensesInCategory,
   expensesInMonth,
+  expensesWithTag,
   monthlySeries,
   rollupByDepth,
+  tagTotals,
   totalOf,
 } from "./analysis.js";
 import { applyExpenseFilters, emptyFilters } from "./filters.js";
@@ -229,7 +231,7 @@ test("biggestChanges orders categories by absolute change", () => {
 test("applyExpenseFilters combines all criteria", () => {
   const list = [
     expense("2025-03-01", 100, 3, { title: "Electricity bill", categoryPath: ["Bills", "Utilities", "Electricity"] }),
-    expense("2025-03-02", 800, 5, { title: "March rent", memberId: 2, memberName: "Jan" }),
+    expense("2025-03-02", 800, 5, { title: "March rent", memberId: 2, memberName: "Jan", tags: ["remont"] }),
     expense("2025-03-03", 30, 6, { paymentSource: "PRIVATE_CARD", description: "cinema" }),
   ];
 
@@ -243,5 +245,28 @@ test("applyExpenseFilters combines all criteria", () => {
   assert.equal(filter({ memberId: "2" }).length, 1);
   assert.equal(filter({ source: "PRIVATE_CARD" }).length, 1);
   assert.equal(filter({ min: "50", max: "500" }).length, 1);
+  assert.equal(filter({ tag: "remont" }).length, 1);
+  assert.equal(filter({ tag: "brak" }).length, 0);
+  assert.equal(filter({ text: "remont" }).length, 1);
   assert.equal(filter({ categoryId: "1", min: "500" }).length, 1);
+});
+
+test("tagTotals counts an expense under each of its tags", () => {
+  const list = [
+    expense("2025-03-01", 100, 6, { tags: ["wakacje", "dzieci"] }),
+    expense("2025-03-02", 50, 6, { tags: ["wakacje"] }),
+    expense("2025-03-03", 10, 6),
+  ];
+
+  const totals = tagTotals(list);
+
+  assert.deepEqual(
+    totals.map((t) => [t.name, t.total, t.count]),
+    [
+      ["wakacje", 150, 2],
+      ["dzieci", 100, 1],
+    ]
+  );
+  assert.equal(expensesWithTag(list, "dzieci").length, 1);
+  assert.equal(expensesWithTag(list, "brak").length, 0);
 });

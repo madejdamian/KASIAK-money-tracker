@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import MonthSwitcher from "../../components/ui/MonthSwitcher";
 import {
   ErrorText,
@@ -10,8 +10,10 @@ import {
   secondaryButtonClass,
 } from "../../components/ui/ui";
 import { fetchCategoryTree } from "../../http/categories";
-import { fetchExpenses } from "../../http/expenses";
+import { deleteExpense, fetchExpenses } from "../../http/expenses";
 import { fetchMembers } from "../../http/members";
+import { fetchTags } from "../../http/tags";
+import { fetchTemplates, applyTemplate } from "../../http/templates";
 import { buildCategoryIndex } from "../../util/analysis";
 import { applyExpenseFilters, emptyFilters, hasActiveFilters } from "../../util/filters";
 import {
@@ -28,7 +30,9 @@ const cardLabel = {
 };
 
 const Expenses = () => {
+  const queryClient = useQueryClient();
   const [month, setMonth] = useMonthParam();
+  const [added, setAdded] = useState(null);
   const [filters, setFilters] = useState(emptyFilters);
   const [showFilters, setShowFilters] = useState(false);
 
@@ -38,6 +42,43 @@ const Expenses = () => {
   });
   const categoriesQuery = useQuery({ queryKey: ["categories"], queryFn: fetchCategoryTree });
   const membersQuery = useQuery({ queryKey: ["members"], queryFn: fetchMembers });
+  const tagsQuery = useQuery({ queryKey: ["tags"], queryFn: fetchTags });
+  const templatesQuery = useQuery({ queryKey: ["templates"], queryFn: fetchTemplates });
+
+  function refreshAfterChange() {
+    queryClient.invalidateQueries({ queryKey: ["expenses"] });
+    queryClient.invalidateQueries({ queryKey: ["budget"] });
+  }
+
+  // one tap adds an expense dated now; it can be undone right away
+  const quickAdd = useMutation({
+    mutationFn: applyTemplate,
+    onSuccess: (expense) => {
+      setAdded(expense);
+      refreshAfterChange();
+    },
+  });
+
+  const undo = useMutation({
+    mutationFn: (slug) => deleteExpense(slug),
+    onSuccess: () => {
+      setAdded(null);
+      refreshAfterChange();
+    },
+  });
+
+  function handleQuickAdd(template) {
+    setAdded(null);
+    if (template.price != null) {
+      quickAdd.mutate({ id: template.id });
+      return;
+    }
+    const answer = window.prompt(`Kwota dla „${template.name}” (zł):`);
+    const price = Number((answer ?? "").replace(",", "."));
+    if (answer !== null && price > 0) {
+      quickAdd.mutate({ id: template.id, changes: { price } });
+    }
+  }
 
   const categories = useMemo(
     () => flattenCategories(categoriesQuery.data ?? []),
@@ -65,6 +106,52 @@ const Expenses = () => {
       <MonthSwitcher value={month} onChange={setMonth} />
 
       <div className="px-4 mt-2">
+        {(templatesQuery.data ?? []).length > 0 && (
+          <div className="mb-4">
+            <p className="text-sm text-neutral-400 mb-2">Szybkie dodawanie</p>
+            <div className="flex flex-wrap gap-2">
+              {templatesQuery.data.map((template) => (
+                <button
+                  key={template.id}
+                  type="button"
+                  disabled={quickAdd.isPending}
+                  onClick={() => handleQuickAdd(template)}
+                  className="h-11 px-4 rounded-full bg-thirdColor border border-neutral-700 text-sm active:bg-neutral-800 disabled:opacity-60"
+                >
+                  {template.name}
+                  {template.price != null && ` · ${formatMoney(template.price)}`}
+                </button>
+              ))}
+            </div>
+            {added && (
+              <p className="text-sm text-emerald-400 mt-2">
+                Dodano: {added.title}, {formatMoney(added.price)}.{" "}
+                <button
+                  type="button"
+                  className="underline"
+                  disabled={undo.isPending}
+                  onClick={() => undo.mutate(added.slug)}
+                >
+                  Cofnij
+                </button>
+              </p>
+            )}
+            <ErrorText>{quickAdd.error ?? undo.error}</ErrorText>
+          </div>
+        )}
+
+        <div className="flex gap-4 text-sm mb-4">
+          <Link to="/recurring" className="text-secondColor underline">
+            Cykliczne
+          </Link>
+          <Link to="/templates" className="text-secondColor underline">
+            Szablony
+          </Link>
+          <Link to="/tags" className="text-secondColor underline">
+            Tagi
+          </Link>
+        </div>
+
         <div className="flex gap-2 mb-3">
           <input
             type="search"
@@ -109,6 +196,20 @@ const Expenses = () => {
               {(membersQuery.data ?? []).map((member) => (
                 <option key={member.id} value={member.id}>
                   {member.name}
+                </option>
+              ))}
+            </select>
+
+            <select
+              aria-label="Tag"
+              value={filters.tag}
+              onChange={(e) => setFilter("tag", e.target.value)}
+              className={inputClass}
+            >
+              <option value="">Wszystkie tagi</option>
+              {(tagsQuery.data ?? []).map((tag) => (
+                <option key={tag} value={tag}>
+                  #{tag}
                 </option>
               ))}
             </select>
@@ -191,6 +292,11 @@ const Expenses = () => {
                   {expense.usageAmount != null &&
                     ` · ${formatUsage(expense.usageAmount, expense.unit)}`}
                 </p>
+                {expense.tags?.length > 0 && (
+                  <p className="text-xs text-secondColor mt-1">
+                    {expense.tags.map((tag) => `#${tag}`).join(" ")}
+                  </p>
+                )}
               </Link>
             </li>
           ))}

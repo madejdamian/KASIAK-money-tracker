@@ -3,6 +3,7 @@ package com.github.rodis00.backend.expense;
 import com.github.rodis00.backend.utils.customValidator.MinValue;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.*;
 
 import java.math.BigDecimal;
@@ -25,7 +26,18 @@ public class Expense {
     @NotNull(message = "Invalid date.")
     private LocalDateTime date;
 
-    private ExpenseCategory category;
+    @NotNull(message = "Category shouldn't be empty.")
+    private Long categoryId;
+
+    @NotNull(message = "Member shouldn't be empty.")
+    private Long memberId;
+
+    @NotNull(message = "Payment source shouldn't be empty.")
+    private PaymentSource paymentSource;
+
+    @PositiveOrZero(message = "Usage can't be negative.")
+    private BigDecimal usageAmount;
+
 
     private String description;
 }

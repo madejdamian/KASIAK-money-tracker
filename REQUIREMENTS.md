@@ -79,13 +79,13 @@ Stan na dzień analizy (kod pochodzi z gotowego projektu).
 | Wymaganie | Status | Uwagi |
 |-----------|--------|-------|
 | Dodawanie / edycja / usuwanie wydatków | Jest | `ExpenseController`, CRUD po `slug`; trzeba rozszerzyć o kartę, domownika i zużycie |
-| Wpłaty do budżetu (przychody) | Częściowo | Jest `Income`, ale per użytkownik i z kategoriami typu SALARY/SELL; brak wpłat na wspólne konto, brak pola „od kogo”, brak wpłat extra |
+| Wpłaty do budżetu (przychody) | Backend gotowy | `Income` ma pole „od kogo” (`memberId`) i typ wpłaty `MONTHLY`/`EXTRA`; stare kategorie przychodów usunięte. Saldo miesięczne: etap 3 |
 | Jedno wspólne konto / budżet domowy | Brak | Dane są przypisane do `UserEntity`; potrzebna encja budżetu/gospodarstwa lub uproszczenie do jednego konta |
-| Domownicy | Brak | Jest tylko `UserEntity` (login, e-mail, hasło); potrzebna lista domowników bez osobnych kont |
-| Karta prywatna / wspólna | Brak | Brak pola rodzaju płatności w `ExpenseEntity` |
-| Kategorie hierarchiczne, dowolna głębokość | Brak | `ExpenseCategory` to enum (FOOD, HOUSE, ...); potrzebna tabela kategorii z `parent_id` i migracja Flyway |
-| Przełączanie szczegółowości kategorii | Brak | Zależy od hierarchii kategorii |
-| Zużycie przy wydatku (np. kWh) | Brak | Brak pola w encji i formularzu |
+| Domownicy | Backend gotowy | Encja `HouseholdMember` i API `/members` (lista, dodawanie, zmiana nazwy, usuwanie bez powiązanych danych). Frontend: etap 4 |
+| Karta prywatna / wspólna | Backend gotowy | Pole `paymentSource` (PRIVATE_CARD / SHARED_CARD) w wydatku. Frontend: etap 4 |
+| Kategorie hierarchiczne, dowolna głębokość | Backend gotowy | Tabela `category` z `parent_id`, API `/categories` (drzewo, dodawanie, przenoszenie, usuwanie), migracja V23 z przykładowymi kategoriami. Frontend: etap 4 |
+| Przełączanie szczegółowości kategorii | Częściowo | Wydatek można przypisać do dowolnego poziomu drzewa; widok z przełączaniem poziomu: etap 5 |
+| Zużycie przy wydatku (np. kWh) | Backend gotowy | Pole `usageAmount` w wydatku i jednostka `unit` w kategorii. Frontend: etap 4 |
 | Wydatki cykliczne | Brak | W `Summaries.jsx` jest tylko zakomentowana makieta „Schedules”, bez backendu |
 | Miesięczny budżet z przenoszeniem dodatniego salda | Brak | Jest filtr rok/miesiąc, ale nie ma logiki salda i okresów rozliczeniowych |
 | Podsumowanie miesiąca | Częściowo | Dashboard pokazuje wartości i wykresy; trzeba sprawdzić, jak liczy saldo |
@@ -104,3 +104,8 @@ Stan na dzień analizy (kod pochodzi z gotowego projektu).
 - Kategorie trzeba przenieść z enumów do bazy (tabela + migracja), bo od tego zależą hierarchia, drill-down i wykresy.
 - Etap 1 (porządki) wykonany: usunięto `data.sql`, rejestrację, reset hasła, wysyłkę e-maili, zdjęcia profilu, ustawienia oraz zarządzanie użytkownikami. Endpointy nie mają już `username` w ścieżce (użytkownik pochodzi z tokenu JWT).
 - Konto: nadal istnieje jedyny użytkownik `admin` z migracji Flyway; zmiana jego nazwy/hasła (np. kolejna migracja) do decyzji w kolejnym etapie.
+
+### Etap 2 (model danych) - stan
+- Backend zrobiony: domownicy, drzewo kategorii, karta, zużycie, wpłaty z informacją od kogo i typem (miesięczna/extra). Nie został zbudowany ani uruchomiony (brak dostępu do Mavena w środowisku), testy jednostkowe zaktualizowane i dopisane, ale niesprawdzone.
+- Frontend nie jest jeszcze dopasowany: formularze nadal używają starych kategorii-enumów, więc dodawanie wydatków i wpłat z UI nie zadziała do czasu etapu 4.
+- Dane logowania jedynego konta pochodzą ze zmiennych środowiskowych `APP_USERNAME` i `APP_PASSWORD` (wzór w `backend/.env.example`).

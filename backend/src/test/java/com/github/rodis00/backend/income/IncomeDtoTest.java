@@ -1,5 +1,6 @@
 package com.github.rodis00.backend.income;
 
+import com.github.rodis00.backend.entity.HouseholdMemberEntity;
 import com.github.rodis00.backend.entity.IncomeEntity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,7 +27,11 @@ class IncomeDtoTest {
         income.setTitle("income");
         income.setAmount(new BigDecimal("100.00"));
         income.setDate(now);
-        income.setCategory(IncomeCategory.OTHER);
+        HouseholdMemberEntity member = new HouseholdMemberEntity();
+        member.setId(3L);
+        member.setName("Anna");
+        income.setMember(member);
+        income.setDepositType(DepositType.EXTRA);
         income.setCreatedAt(now);
         income.setUpdatedAt(now);
         income.setDescription("income");
@@ -39,7 +44,9 @@ class IncomeDtoTest {
                 income.getTitle(),
                 income.getAmount(),
                 income.getDate(),
-                income.getCategory(),
+                income.getMember().getId(),
+                income.getMember().getName(),
+                income.getDepositType(),
                 income.getCreatedAt(),
                 income.getUpdatedAt(),
                 income.getDescription()
@@ -52,7 +59,9 @@ class IncomeDtoTest {
         assertEquals(expectedDto.getTitle(), incomeDto.getTitle());
         assertEquals(expectedDto.getAmount(), incomeDto.getAmount());
         assertEquals(expectedDto.getDate(), incomeDto.getDate());
-        assertEquals(expectedDto.getCategory(), incomeDto.getCategory());
+        assertEquals(expectedDto.getMemberId(), incomeDto.getMemberId());
+        assertEquals(expectedDto.getMemberName(), incomeDto.getMemberName());
+        assertEquals(expectedDto.getDepositType(), incomeDto.getDepositType());
         assertEquals(expectedDto.getCreatedAt(), incomeDto.getCreatedAt());
         assertEquals(expectedDto.getUpdatedAt(), incomeDto.getUpdatedAt());
         assertEquals(expectedDto.getDescription(), incomeDto.getDescription());

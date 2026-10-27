@@ -1,8 +1,10 @@
 package com.github.rodis00.backend.expense;
 
+import com.github.rodis00.backend.category.CategoryService;
 import com.github.rodis00.backend.entity.ExpenseEntity;
 import com.github.rodis00.backend.entity.UserEntity;
 import com.github.rodis00.backend.exception.EntityNotFoundException;
+import com.github.rodis00.backend.member.MemberService;
 import com.github.rodis00.backend.page.GlobalPage;
 import com.github.rodis00.backend.user.UserService;
 import com.github.rodis00.backend.utils.TitleFormatter;
@@ -24,17 +26,23 @@ public class ExpenseService {
 
     private final ExpenseRepository expenseRepository;
     private final UserService userService;
+    private final CategoryService categoryService;
+    private final MemberService memberService;
     private final ExpenseSearchDao expenseSearchDao;
     private final DateValidator dateValidator;
 
     public ExpenseService(
             ExpenseRepository expenseRepository,
             UserService userService,
+            CategoryService categoryService,
+            MemberService memberService,
             ExpenseSearchDao expenseSearchDao,
             DateValidator dateValidator
     ) {
         this.expenseRepository = expenseRepository;
         this.userService = userService;
+        this.categoryService = categoryService;
+        this.memberService = memberService;
         this.expenseSearchDao = expenseSearchDao;
         this.dateValidator = dateValidator;
     }
@@ -54,7 +62,10 @@ public class ExpenseService {
                         .user(user)
                         .description(expense.getDescription())
                         .slug(generateSlug())
-                        .category(expense.getCategory())
+                        .category(categoryService.getCategory(expense.getCategoryId()))
+                        .member(memberService.getMember(expense.getMemberId()))
+                        .paymentSource(expense.getPaymentSource())
+                        .usageAmount(expense.getUsageAmount())
                         .build()
         );
     }
@@ -80,7 +91,10 @@ public class ExpenseService {
         actualExpense.setPrice(expense.getPrice());
         actualExpense.setDate(expense.getDate());
         actualExpense.setDescription(expense.getDescription());
-        actualExpense.setCategory(expense.getCategory());
+        actualExpense.setCategory(categoryService.getCategory(expense.getCategoryId()));
+        actualExpense.setMember(memberService.getMember(expense.getMemberId()));
+        actualExpense.setPaymentSource(expense.getPaymentSource());
+        actualExpense.setUsageAmount(expense.getUsageAmount());
         expenseRepository.save(actualExpense);
 
         return actualExpense;

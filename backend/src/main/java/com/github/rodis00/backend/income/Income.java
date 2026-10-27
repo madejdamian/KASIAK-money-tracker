@@ -25,7 +25,12 @@ public class Income {
     @NotNull(message = "Invalid date.")
     private LocalDateTime date;
 
-    private IncomeCategory category;
+    @NotNull(message = "Member shouldn't be empty.")
+    private Long memberId;
+
+    // MONTHLY (regular transfer to the shared account) or EXTRA; MONTHLY when not given
+    private DepositType depositType;
+
 
     private String description;
 }

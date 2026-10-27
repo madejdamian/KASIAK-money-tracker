@@ -18,6 +18,9 @@ application:
       secret-key: ${JWT_SECRET_KEY}
       jwt-expiration: ${JWT_EXPIRATION}
       jwt-refresh-expiration: ${JWT_REFRESH_EXPIRATION}
+  user:
+    username: ${APP_USERNAME:}
+    password: ${APP_PASSWORD:}
   frontend-port: ${FRONTEND_PORT}
 springdoc:
   swagger-ui:

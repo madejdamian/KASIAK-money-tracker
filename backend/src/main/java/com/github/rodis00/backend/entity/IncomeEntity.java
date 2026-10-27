@@ -1,6 +1,6 @@
 package com.github.rodis00.backend.entity;
 
-import com.github.rodis00.backend.income.IncomeCategory;
+import com.github.rodis00.backend.income.DepositType;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -34,6 +34,11 @@ public class IncomeEntity extends BaseEntity {
     )
     private String slug;
 
+    @ManyToOne
+    @JoinColumn(name = "member_id")
+    private HouseholdMemberEntity member;
+
     @Enumerated(EnumType.STRING)
-    private IncomeCategory category = IncomeCategory.OTHER;
+    @Builder.Default
+    private DepositType depositType = DepositType.MONTHLY;
 }

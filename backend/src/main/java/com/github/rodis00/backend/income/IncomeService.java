@@ -3,6 +3,7 @@ package com.github.rodis00.backend.income;
 import com.github.rodis00.backend.entity.IncomeEntity;
 import com.github.rodis00.backend.entity.UserEntity;
 import com.github.rodis00.backend.exception.EntityNotFoundException;
+import com.github.rodis00.backend.member.MemberService;
 import com.github.rodis00.backend.page.GlobalPage;
 import com.github.rodis00.backend.user.UserService;
 import com.github.rodis00.backend.utils.TitleFormatter;
@@ -24,17 +25,20 @@ public class IncomeService {
 
     private final IncomeRepository incomeRepository;
     private final UserService userService;
+    private final MemberService memberService;
     private final IncomeSearchDao incomeSearchDao;
     private final DateValidator dateValidator;
 
     public IncomeService(
             IncomeRepository incomeRepository,
             UserService userService,
+            MemberService memberService,
             IncomeSearchDao incomeSearchDao,
             DateValidator dateValidator
     ) {
         this.incomeRepository = incomeRepository;
         this.userService = userService;
+        this.memberService = memberService;
         this.incomeSearchDao = incomeSearchDao;
         this.dateValidator = dateValidator;
     }
@@ -54,9 +58,14 @@ public class IncomeService {
                         .user(user)
                         .description(income.getDescription())
                         .slug(generateSlug())
-                        .category(income.getCategory())
+                        .member(memberService.getMember(income.getMemberId()))
+                        .depositType(depositTypeOf(income))
                         .build()
         );
+    }
+
+    private DepositType depositTypeOf(Income income) {
+        return income.getDepositType() == null ? DepositType.MONTHLY : income.getDepositType();
     }
 
     private String generateSlug() {
@@ -79,7 +88,8 @@ public class IncomeService {
         actualIncome.setAmount(income.getAmount());
         actualIncome.setDate(income.getDate());
         actualIncome.setDescription(income.getDescription());
-        actualIncome.setCategory(income.getCategory());
+        actualIncome.setMember(memberService.getMember(income.getMemberId()));
+        actualIncome.setDepositType(depositTypeOf(income));
         incomeRepository.save(actualIncome);
 
         return actualIncome;

@@ -1,6 +1,6 @@
 package com.github.rodis00.backend.entity;
 
-import com.github.rodis00.backend.expense.ExpenseCategory;
+import com.github.rodis00.backend.expense.PaymentSource;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -34,6 +34,17 @@ public class ExpenseEntity extends BaseEntity {
     )
     private String slug;
 
+    @ManyToOne
+    @JoinColumn(name = "category_id")
+    private CategoryEntity category;
+
+    @ManyToOne
+    @JoinColumn(name = "member_id")
+    private HouseholdMemberEntity member;
+
     @Enumerated(EnumType.STRING)
-    private ExpenseCategory category = ExpenseCategory.OTHER;
+    private PaymentSource paymentSource;
+
+    // consumption connected with this expense, in the unit of the category (e.g. kWh)
+    private BigDecimal usageAmount;
 }

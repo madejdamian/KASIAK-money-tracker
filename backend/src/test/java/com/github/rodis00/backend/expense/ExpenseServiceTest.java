@@ -1,8 +1,12 @@
 package com.github.rodis00.backend.expense;
 
+import com.github.rodis00.backend.category.CategoryService;
+import com.github.rodis00.backend.entity.CategoryEntity;
 import com.github.rodis00.backend.entity.ExpenseEntity;
+import com.github.rodis00.backend.entity.HouseholdMemberEntity;
 import com.github.rodis00.backend.entity.UserEntity;
 import com.github.rodis00.backend.exception.EntityNotFoundException;
+import com.github.rodis00.backend.member.MemberService;
 import com.github.rodis00.backend.page.GlobalPage;
 import com.github.rodis00.backend.user.UserService;
 import com.github.rodis00.backend.utils.TitleFormatter;
@@ -34,6 +38,12 @@ class ExpenseServiceTest {
     private UserService userService;
 
     @Mock
+    private CategoryService categoryService;
+
+    @Mock
+    private MemberService memberService;
+
+    @Mock
     private DateValidator dateValidator;
 
     @Mock
@@ -41,6 +51,20 @@ class ExpenseServiceTest {
 
     @InjectMocks
     private ExpenseService expenseService;
+
+    private CategoryEntity category(Long id, String name) {
+        CategoryEntity category = new CategoryEntity();
+        category.setId(id);
+        category.setName(name);
+        return category;
+    }
+
+    private HouseholdMemberEntity member(Long id, String name) {
+        HouseholdMemberEntity member = new HouseholdMemberEntity();
+        member.setId(id);
+        member.setName(name);
+        return member;
+    }
 
     @Test
     void shouldCapitalizeFirstLetter() {
@@ -63,8 +87,14 @@ class ExpenseServiceTest {
         newExpense.setTitle("car");
         newExpense.setDate(date);
         newExpense.setPrice(new BigDecimal("6000.00"));
-        newExpense.setCategory(ExpenseCategory.TRANSPORT);
+        newExpense.setCategoryId(10L);
+        newExpense.setMemberId(20L);
+        newExpense.setPaymentSource(PaymentSource.PRIVATE_CARD);
+        newExpense.setUsageAmount(new BigDecimal("12.500"));
         newExpense.setDescription("car description");
+
+        CategoryEntity category = category(10L, "Transport");
+        HouseholdMemberEntity member = member(20L, "Anna");
 
         ExpenseEntity expectedExpense = new ExpenseEntity();
         expectedExpense.setId(1L);
@@ -74,11 +104,16 @@ class ExpenseServiceTest {
         expectedExpense.setUser(user);
         expectedExpense.setCreatedAt(date);
         expectedExpense.setUpdatedAt(date);
-        expectedExpense.setCategory(ExpenseCategory.TRANSPORT);
+        expectedExpense.setCategory(category);
+        expectedExpense.setMember(member);
+        expectedExpense.setPaymentSource(PaymentSource.PRIVATE_CARD);
+        expectedExpense.setUsageAmount(new BigDecimal("12.500"));
         expectedExpense.setDescription("car description");
         expectedExpense.setSlug("expense-1");
 
         when(userService.getUserByUsername(username)).thenReturn(user);
+        when(categoryService.getCategory(10L)).thenReturn(category);
+        when(memberService.getMember(20L)).thenReturn(member);
         when(expenseRepository.save(any(ExpenseEntity.class))).thenReturn(expectedExpense);
         doNothing().when(dateValidator).validate(newExpense.getDate());
 
@@ -93,6 +128,9 @@ class ExpenseServiceTest {
         assertEquals(expectedExpense.getCreatedAt(), savedExpense.getCreatedAt());
         assertEquals(expectedExpense.getUpdatedAt(), savedExpense.getUpdatedAt());
         assertEquals(expectedExpense.getCategory(), savedExpense.getCategory());
+        assertEquals(expectedExpense.getMember(), savedExpense.getMember());
+        assertEquals(expectedExpense.getPaymentSource(), savedExpense.getPaymentSource());
+        assertEquals(expectedExpense.getUsageAmount(), savedExpense.getUsageAmount());
         assertEquals(expectedExpense.getDescription(), savedExpense.getDescription());
         assertEquals(expectedExpense.getSlug(), savedExpense.getSlug());
 
@@ -141,17 +179,23 @@ class ExpenseServiceTest {
         newExpense.setTitle("new expense");
         newExpense.setPrice(new BigDecimal("150.00"));
         newExpense.setDate(LocalDateTime.of(2024, 5, 25, 18, 28));
-        newExpense.setCategory(ExpenseCategory.OTHER);
+        newExpense.setCategoryId(11L);
+        newExpense.setMemberId(21L);
+        newExpense.setPaymentSource(PaymentSource.SHARED_CARD);
         newExpense.setDescription("new expense description");
 
         ExpenseEntity expected = new ExpenseEntity();
         expected.setTitle("New expense");
         expected.setPrice(new BigDecimal("150.00"));
         expected.setDate(LocalDateTime.of(2024, 5, 25, 18, 28));
-        expected.setCategory(ExpenseCategory.OTHER);
         expected.setDescription("new expense description");
 
+        CategoryEntity newCategory = category(11L, "Other");
+        HouseholdMemberEntity newMember = member(21L, "Jan");
+
         when(expenseRepository.findBySlug(slug)).thenReturn(Optional.of(expected));
+        when(categoryService.getCategory(11L)).thenReturn(newCategory);
+        when(memberService.getMember(21L)).thenReturn(newMember);
         when(expenseRepository.save(any(ExpenseEntity.class))).thenReturn(expected);
 
         ExpenseEntity result = expenseService.updateExpense(slug, newExpense);
@@ -160,7 +204,9 @@ class ExpenseServiceTest {
         assertEquals(expected.getTitle(), result.getTitle());
         assertEquals(expected.getPrice(), result.getPrice());
         assertEquals(expected.getDate(), result.getDate());
-        assertEquals(expected.getCategory(), result.getCategory());
+        assertEquals(newCategory, result.getCategory());
+        assertEquals(newMember, result.getMember());
+        assertEquals(PaymentSource.SHARED_CARD, result.getPaymentSource());
         assertEquals(expected.getDescription(), result.getDescription());
 
         verify(expenseRepository, times(1)).findBySlug(slug);
@@ -340,7 +386,7 @@ class ExpenseServiceTest {
         expectedExpense.setTitle("Sell");
         expectedExpense.setPrice(new BigDecimal("100"));
         expectedExpense.setDate(LocalDateTime.of(2025, 3, 17, 15, 15));
-        expectedExpense.setCategory(ExpenseCategory.CLOTHES);
+        expectedExpense.setCategory(category(30L, "Clothes"));
 
         ExpenseDto expectedDto = ExpenseDto.from(expectedExpense);
 
@@ -353,7 +399,8 @@ class ExpenseServiceTest {
         assertEquals(expectedDto.getTitle(), lastAdded.getTitle());
         assertEquals(expectedDto.getPrice(), lastAdded.getPrice());
         assertEquals(expectedDto.getDate(), lastAdded.getDate());
-        assertEquals(expectedDto.getCategory(), lastAdded.getCategory());
+        assertEquals(expectedDto.getCategoryId(), lastAdded.getCategoryId());
+        assertEquals(List.of("Clothes"), lastAdded.getCategoryPath());
 
         verify(userService, times(1)).getUserByUsername(username);
         verify(expenseRepository, times(1)).findLastAdded(user.getId());

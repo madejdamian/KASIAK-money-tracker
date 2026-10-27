@@ -79,4 +79,14 @@ public class GlobalExceptionHandler {
                 Collections.singletonMap(e.getFieldName(), e.getMessage())
         );
     }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(InvalidRequestException.class)
+    public ApiResponse handleInvalidRequestException(InvalidRequestException e) {
+        return new ApiResponse(
+                HttpStatus.BAD_REQUEST,
+                HttpStatus.BAD_REQUEST.value(),
+                Collections.singletonMap(e.getFieldName(), e.getMessage())
+        );
+    }
 }

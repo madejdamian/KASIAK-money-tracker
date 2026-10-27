@@ -1,11 +1,13 @@
 package com.github.rodis00.backend.expense;
 
+import com.github.rodis00.backend.category.CategoryDto;
 import com.github.rodis00.backend.entity.ExpenseEntity;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @AllArgsConstructor
@@ -14,7 +16,13 @@ public class ExpenseDto {
     private String title;
     private BigDecimal price;
     private LocalDateTime date;
-    private ExpenseCategory category;
+    private Long categoryId;
+    private List<String> categoryPath;
+    private String unit;
+    private Long memberId;
+    private String memberName;
+    private PaymentSource paymentSource;
+    private BigDecimal usageAmount;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private String description;
@@ -25,7 +33,13 @@ public class ExpenseDto {
                 expense.getTitle(),
                 expense.getPrice(),
                 expense.getDate(),
-                expense.getCategory(),
+                expense.getCategory() == null ? null : expense.getCategory().getId(),
+                CategoryDto.pathOf(expense.getCategory()),
+                expense.getCategory() == null ? null : expense.getCategory().getUnit(),
+                expense.getMember() == null ? null : expense.getMember().getId(),
+                expense.getMember() == null ? null : expense.getMember().getName(),
+                expense.getPaymentSource(),
+                expense.getUsageAmount(),
                 expense.getCreatedAt(),
                 expense.getUpdatedAt(),
                 expense.getDescription()

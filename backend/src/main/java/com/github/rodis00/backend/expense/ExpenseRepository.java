@@ -28,6 +28,10 @@ public interface ExpenseRepository extends JpaRepository<ExpenseEntity, Long> {
 
     Optional<ExpenseEntity> findBySlug(String slug);
 
+    boolean existsByCategoryId(Long categoryId);
+
+    boolean existsByMemberId(Long memberId);
+
     @Query(value = "select * from expense_tracker.expense " +
             "where user_id = :userId " +
             "order by created_at desc " +

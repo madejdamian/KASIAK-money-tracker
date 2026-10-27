@@ -1,8 +1,10 @@
 package com.github.rodis00.backend.income;
 
+import com.github.rodis00.backend.entity.HouseholdMemberEntity;
 import com.github.rodis00.backend.entity.IncomeEntity;
 import com.github.rodis00.backend.entity.UserEntity;
 import com.github.rodis00.backend.exception.EntityNotFoundException;
+import com.github.rodis00.backend.member.MemberService;
 import com.github.rodis00.backend.page.GlobalPage;
 import com.github.rodis00.backend.user.UserService;
 import com.github.rodis00.backend.utils.TitleFormatter;
@@ -34,6 +36,9 @@ class IncomeServiceTest {
     private UserService userService;
 
     @Mock
+    private MemberService memberService;
+
+    @Mock
     private DateValidator dateValidator;
 
     @Mock
@@ -50,6 +55,13 @@ class IncomeServiceTest {
         assertEquals("123", TitleFormatter.capitalizeFirstLetter("123"));
     }
 
+    private HouseholdMemberEntity member(Long id, String name) {
+        HouseholdMemberEntity member = new HouseholdMemberEntity();
+        member.setId(id);
+        member.setName(name);
+        return member;
+    }
+
     @Test
     void shouldSaveIncome() {
         UserEntity user = new UserEntity();
@@ -62,8 +74,11 @@ class IncomeServiceTest {
         newIncome.setTitle("pension");
         newIncome.setAmount(new BigDecimal("5000.00"));
         newIncome.setDate(incomeDate);
-        newIncome.setCategory(IncomeCategory.PENSION);
+        newIncome.setMemberId(20L);
+        newIncome.setDepositType(DepositType.EXTRA);
         newIncome.setDescription("pension description");
+
+        HouseholdMemberEntity member = member(20L, "Anna");
 
         IncomeEntity expectedIncome = new IncomeEntity();
         expectedIncome.setId(1L);
@@ -73,11 +88,13 @@ class IncomeServiceTest {
         expectedIncome.setUser(user);
         expectedIncome.setCreatedAt(incomeDate);
         expectedIncome.setUpdatedAt(incomeDate);
-        expectedIncome.setCategory(IncomeCategory.PENSION);
+        expectedIncome.setMember(member);
+        expectedIncome.setDepositType(DepositType.EXTRA);
         expectedIncome.setDescription("pension description");
         expectedIncome.setSlug("income slug");
 
         when(userService.getUserByUsername(user.getUsername())).thenReturn(user);
+        when(memberService.getMember(20L)).thenReturn(member);
         when(incomeRepository.save(any(IncomeEntity.class))).thenReturn(expectedIncome);
         doNothing().when(dateValidator).validate(newIncome.getDate());
 
@@ -91,7 +108,8 @@ class IncomeServiceTest {
         assertEquals(expectedIncome.getUser().getId(), savedIncome.getUser().getId());
         assertEquals(expectedIncome.getCreatedAt(), savedIncome.getCreatedAt());
         assertEquals(expectedIncome.getUpdatedAt(), savedIncome.getUpdatedAt());
-        assertEquals(expectedIncome.getCategory(), savedIncome.getCategory());
+        assertEquals(expectedIncome.getMember(), savedIncome.getMember());
+        assertEquals(expectedIncome.getDepositType(), savedIncome.getDepositType());
         assertEquals(expectedIncome.getDescription(), savedIncome.getDescription());
         assertEquals(expectedIncome.getSlug(), savedIncome.getSlug());
 
@@ -106,7 +124,6 @@ class IncomeServiceTest {
         income.setTitle("pension");
         income.setAmount(new BigDecimal("5000.00"));
         income.setDate(LocalDateTime.of(2024, 5, 24, 14, 54));
-        income.setCategory(IncomeCategory.PENSION);
         income.setDescription("pension description");
         income.setSlug("pension slug");
 
@@ -143,16 +160,18 @@ class IncomeServiceTest {
         income.setTitle("sell potato xD");
         income.setAmount(new BigDecimal("100"));
         income.setDate(newDate);
-        income.setCategory(IncomeCategory.SELL);
+        income.setMemberId(21L);
         income.setDescription("sell description");
 
         IncomeEntity expectedIncome = new IncomeEntity();
         expectedIncome.setTitle("Sell potato xD");
         expectedIncome.setAmount(new BigDecimal("100"));
         expectedIncome.setDate(newDate);
-        expectedIncome.setCategory(IncomeCategory.SELL);
         expectedIncome.setDescription("sell description");
 
+        HouseholdMemberEntity newMember = member(21L, "Jan");
+
+        when(memberService.getMember(21L)).thenReturn(newMember);
         when(incomeRepository.findBySlug(slug)).thenReturn(Optional.of(expectedIncome));
         when(incomeRepository.save(any(IncomeEntity.class))).thenReturn(expectedIncome);
 
@@ -162,6 +181,8 @@ class IncomeServiceTest {
         assertEquals(expectedIncome.getTitle(), savedIncome.getTitle());
         assertEquals(expectedIncome.getAmount(), savedIncome.getAmount());
         assertEquals(expectedIncome.getDate(), savedIncome.getDate());
+        assertEquals(newMember, savedIncome.getMember());
+        assertEquals(DepositType.MONTHLY, savedIncome.getDepositType());
 
         verify(incomeRepository, times(1)).findBySlug(slug);
         verify(incomeRepository, times(1)).save(any(IncomeEntity.class));
@@ -323,7 +344,7 @@ class IncomeServiceTest {
         expectedIncome.setTitle("Sell");
         expectedIncome.setAmount(new BigDecimal("100"));
         expectedIncome.setDate(LocalDateTime.of(2025, 3, 17, 15, 15));
-        expectedIncome.setCategory(IncomeCategory.SELL);
+        expectedIncome.setMember(member(22L, "Ola"));
 
         IncomeDto expectedDto = IncomeDto.from(expectedIncome);
 
@@ -336,7 +357,7 @@ class IncomeServiceTest {
         assertEquals(expectedDto.getTitle(), lastAdded.getTitle());
         assertEquals(expectedDto.getAmount(), lastAdded.getAmount());
         assertEquals(expectedDto.getDate(), lastAdded.getDate());
-        assertEquals(expectedDto.getCategory(), lastAdded.getCategory());
+        assertEquals(expectedDto.getMemberId(), lastAdded.getMemberId());
 
         verify(userService, times(1)).getUserByUsername(username);
         verify(incomeRepository, times(1)).findLastAdded(user.getId());

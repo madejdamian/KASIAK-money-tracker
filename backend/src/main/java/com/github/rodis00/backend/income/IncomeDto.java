@@ -14,7 +14,9 @@ public class IncomeDto {
     private String title;
     private BigDecimal amount;
     private LocalDateTime date;
-    private IncomeCategory category;
+    private Long memberId;
+    private String memberName;
+    private DepositType depositType;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private String description;
@@ -25,7 +27,9 @@ public class IncomeDto {
                 income.getTitle(),
                 income.getAmount(),
                 income.getDate(),
-                income.getCategory(),
+                income.getMember() == null ? null : income.getMember().getId(),
+                income.getMember() == null ? null : income.getMember().getName(),
+                income.getDepositType(),
                 income.getCreatedAt(),
                 income.getUpdatedAt(),
                 income.getDescription()

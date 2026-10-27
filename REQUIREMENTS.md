@@ -27,6 +27,7 @@ _Do uzupełnienia._
   - zakupy domowe -> jedzenie / wyposażenie domu,
   - opłaty -> kredyt / czynsz / media -> prąd / woda / internet.
 - [ ] Na każdym poziomie widoczna suma wydatków kategorii (z podkategoriami) i jej udział w budżecie.
+- [ ] Analiza w okresach miesięcznych: porównanie miesiąc do miesiąca, zarówno kwot, jak i zużycia (np. zużycie prądu w kWh w kolejnych miesiącach).
 
 ### Ustalenia
 - Jedno wspólne konto dla całego domu (bez osobnych kont/logowania domowników).

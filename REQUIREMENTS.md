@@ -13,18 +13,20 @@ _Do uzupełnienia._
 - [ ] Dodawanie budżetu domowego z wpłatami/wkładami od różnych domowników (każdy domownik wnosi swoją część).
 
 ### Wydatki i kategorie
-- [ ] Dodawanie wydatków wraz z przypisaniem do kategorii.
-- [ ] Kategorie hierarchiczne, z możliwością podziału na dwa poziomy szczegółowości:
+- [ ] Dodawanie wydatków wraz z przypisaniem do kategorii, domownika i karty (prywatna/wspólna).
+- [ ] Opcjonalne wpisanie zużycia przy wydatku (np. prąd w kWh).
+- [ ] Kategorie hierarchiczne o dowolnej głębokości, z możliwością podziału na różne poziomy szczegółowości:
   - ogólnie, np. „Streamingi VOD”,
   - szczegółowo, np. osobno każda posiadana usługa (Netflix, HBO, Disney+ itd.).
 - [ ] Możliwość przełączania szczegółowości: rozdzielać wydatki bardziej lub mniej szczegółowo.
 - [ ] Widok budżetu w podziale na kategorie nadrzędne, np. rozrywka, jedzenie, rachunki itp.
 
-### Do doprecyzowania
-- Czy domownicy mają własne konta/logowanie, czy to jedno konto z wyborem osoby?
-- Czy wydatek jest przypisany do konkretnego domownika (kto zapłacił)?
-- Czy budżet jest miesięczny, czy w innym okresie? Czy są limity na kategorie?
-- Czy kategorie mają mieć dowolną głębokość zagnieżdżenia, czy wystarczą dwa poziomy?
+### Ustalenia
+- Jedno wspólne konto dla całego domu (bez osobnych kont/logowania domowników).
+- Wydatek jest przypisany do domownika i do źródła płatności: karta prywatna lub karta wspólna.
+- Budżet jest miesięczny, bez limitów na kategorie.
+- Kategorie mają dowolną głębokość zagnieżdżenia, np. rachunki -> media -> prąd.
+- Kategoria może mieć dodatkowo wpisywane zużycie (np. kWh dla prądu) obok kwoty.
 
 ## Wymagania niefunkcjonalne
 

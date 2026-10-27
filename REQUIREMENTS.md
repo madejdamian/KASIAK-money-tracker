@@ -22,6 +22,11 @@ _Do uzupełnienia._
   - szczegółowo, np. osobno każda posiadana usługa (Netflix, HBO, Disney+ itd.).
 - [ ] Możliwość przełączania szczegółowości: rozdzielać wydatki bardziej lub mniej szczegółowo.
 - [ ] Widok budżetu w podziale na kategorie nadrzędne, np. rozrywka, jedzenie, rachunki itp.
+- [ ] Analiza wydatków na wielu poziomach (drill-down): od widoku całego budżetu, przez kategorie główne, aż do najniższych podkategorii. Przykład:
+  - budżet -> rozrywka / zakupy domowe / opłaty,
+  - zakupy domowe -> jedzenie / wyposażenie domu,
+  - opłaty -> kredyt / czynsz / media -> prąd / woda / internet.
+- [ ] Na każdym poziomie widoczna suma wydatków kategorii (z podkategoriami) i jej udział w budżecie.
 
 ### Ustalenia
 - Jedno wspólne konto dla całego domu (bez osobnych kont/logowania domowników).

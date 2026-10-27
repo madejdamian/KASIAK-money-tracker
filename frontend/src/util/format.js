@@ -120,3 +120,22 @@ export function recallChoice(key) {
     return "";
   }
 }
+
+// "+12%" / "−3%" for a ratio like 0.123; "–" when there is nothing to compare with
+export function formatPercent(ratio) {
+  if (ratio == null) return "–";
+  const rounded = Math.round(ratio * 100);
+  return `${rounded > 0 ? "+" : rounded < 0 ? "−" : ""}${Math.abs(rounded)}%`;
+}
+
+export function formatDelta(value) {
+  if (value === 0) return formatMoney(0);
+  return `${value > 0 ? "+" : "−"}${formatMoney(Math.abs(value))}`;
+}
+
+// short label of a month for chart rows, e.g. "mar 25"
+export function shortMonthLabel({ year, month }) {
+  return new Intl.DateTimeFormat("pl-PL", { month: "short", year: "2-digit" }).format(
+    new Date(year, month - 1, 1)
+  );
+}

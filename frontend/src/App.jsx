@@ -8,6 +8,7 @@ import Expenses from "./pages/expenses/Expenses";
 import ExpenseForm from "./pages/expenses/ExpenseForm";
 import Deposits from "./pages/deposits/Deposits";
 import DepositForm from "./pages/deposits/DepositForm";
+import Analysis from "./pages/analysis/Analysis";
 import Settings from "./pages/settings/Settings";
 
 const router = createBrowserRouter([
@@ -24,6 +25,7 @@ const router = createBrowserRouter([
           { path: "expenses/:slug", element: <ExpenseForm /> },
           { path: "deposits", element: <Deposits /> },
           { path: "deposits/:slug", element: <DepositForm /> },
+          { path: "analysis", element: <Analysis /> },
           { path: "settings", element: <Settings /> },
           { path: "login", element: <Login /> },
         ],

@@ -6,18 +6,20 @@ import {
   faCartShopping,
   faPiggyBank,
   faGear,
+  faChartPie,
 } from "@fortawesome/free-solid-svg-icons";
 
 const items = [
   { to: "/", label: "Budżet", icon: faWallet, end: true },
   { to: "/expenses", label: "Wydatki", icon: faCartShopping },
   { to: "/deposits", label: "Wpłaty", icon: faPiggyBank },
+  { to: "/analysis", label: "Analizy", icon: faChartPie },
   { to: "/settings", label: "Ustawienia", icon: faGear },
 ];
 
 const BottomNav = () => (
   <nav className="fixed bottom-0 inset-x-0 z-40 bg-fourthColor border-t border-neutral-800 pb-[env(safe-area-inset-bottom)]">
-    <ul className="max-w-2xl mx-auto grid grid-cols-4">
+    <ul className="max-w-2xl mx-auto grid grid-cols-5">
       {items.map((item) => (
         <li key={item.to}>
           <NavLink

@@ -1,7 +1,8 @@
 import { api } from "./api";
 
+// month is optional: without it the whole year is returned
 export const fetchExpenses = ({ year, month }) =>
-  api(`/expenses/?year=${year}&month=${month}`);
+  api(`/expenses/?year=${year}${month ? `&month=${month}` : ""}`);
 
 export const fetchExpense = (slug) => api(`/expenses/${slug}`);
 

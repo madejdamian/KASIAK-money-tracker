@@ -1,146 +1,74 @@
-import React, { useEffect, useState } from "react";
-import BarChart from "../../components/charts/BarChart";
-import DataPointsSelection from "../../components/transactionComponents/DataPointsSelection";
-import Modal from "../../components/modal/Modal";
-import { useSelector, useDispatch } from "react-redux";
-import { modalActions } from "../../store/modal-slice";
-import AddTransactionForm from "../../components/form/AddTransactionForm";
-import TransactionList from "../../components/transactionComponents/TransactionList";
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { fetchAllExpenses, fetchExpenses } from "../../http/expenseHttp";
-import PageNumber from "../../components/transactionComponents/PageNumber";
+import React from "react";
 import { Link } from "react-router-dom";
-import AddInfoModal from "../../components/modal/AddInfoModal";
-import Percentage from "../../components/transactionComponents/Percentage";
-import FullScreenLoader from "../../components/fullScreenLoader/FullScreenLoader";
-import useLoader from "../../hooks/useLoader";
-import LatestAdded from "../../components/transactionComponents/LatestAdded";
+import { useQuery } from "@tanstack/react-query";
+import MonthSwitcher from "../../components/ui/MonthSwitcher";
+import { ErrorText, PageHeader, primaryButtonClass } from "../../components/ui/ui";
+import { fetchExpenses } from "../../http/expenses";
+import { formatDay, formatMoney, formatUsage } from "../../util/format";
+import { useMonthParam } from "../../util/useMonthParam";
+
+const cardLabel = {
+  SHARED_CARD: "wspólna",
+  PRIVATE_CARD: "prywatna",
+};
 
 const Expenses = () => {
-  const [pageNumber, setPageNumber] = useState(0);
-  const [chartPoints, setChartPoints] = useState("Monthly");
-  const userId = useSelector((state) => state.auth.user);
-  const dispatch = useDispatch();
-  const version = useSelector((state) => state.modal.modalVersion);
-  const token = localStorage.getItem("token");
-  const pageSize = 5;
-  const year =
-    chartPoints === "Monthly" || chartPoints === "Weekly"
-      ? new Date().getFullYear()
-      : "";
-  const month = chartPoints === "Weekly" ? new Date().getMonth() + 1 : "";
-  let expensesPrice = 0;
+  const [month, setMonth] = useMonthParam();
 
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
-
-  const { data, isPending, error, isError } = useQuery({
-    queryKey: [
-      "expenses",
-      { userId, token, pageNumber, pageSize, month, year },
-    ],
-    queryFn: () =>
-      fetchExpenses({ userId, token, pageSize, year, month, pageNumber }),
-    placeholderData: keepPreviousData,
-    enabled: !!userId,
+  const { data, isPending, error } = useQuery({
+    queryKey: ["expenses", month],
+    queryFn: () => fetchExpenses(month),
   });
 
-  const { data: allExpensesData, isPending: allExpensesPending } = useQuery({
-    queryKey: ["expenses", { userId, token, year, month }],
-    queryFn: () => fetchAllExpenses({ userId, token, year, month }),
-    enabled: !!userId,
-  });
-
-  const isFetching = isPending || allExpensesPending;
-  const isLoading = useLoader(isFetching);
-
-  if (isLoading) {
-    return <FullScreenLoader />;
-  }
-
-  if (allExpensesData) {
-    allExpensesData.forEach((item) => (expensesPrice += item.price));
-  }
-
-  const handleDataPointsSelection = (selectedPoints) => {
-    setChartPoints(selectedPoints);
-  };
-
-  const handleModalForm = () => {
-    dispatch(modalActions.showForm());
-  };
-
-  function pageIncrement() {
-    setPageNumber((prev) => prev + 1);
-  }
-
-  function pageDecrement() {
-    setPageNumber((prev) => prev - 1);
-  }
+  const expenses = [...(data ?? [])].sort((a, b) => b.date.localeCompare(a.date));
+  const total = expenses.reduce((sum, expense) => sum + Number(expense.price), 0);
 
   return (
     <>
-      <Modal open={version === "form"} className="min-h-full xsm:rounded-3xl">
-        <AddTransactionForm upperValue={"Price"} value={"price"} />
-      </Modal>
-
-      <AddInfoModal version={version} name="expenses" />
-
-      <main className="w-full min-h-screen flex flex-col items-center text-white">
-        <div className="text-center">
-          <h1 className="text-xl mt-4 text-neutral-600">Total Expenses</h1>
-          <span className="text-3xl text-red-500">
-            {expensesPrice.toFixed(2)}$
-          </span>
-        </div>
-        <DataPointsSelection
-          handleSelection={handleDataPointsSelection}
-          selectedPoints={chartPoints}
-        />
-        <BarChart
-          selectedPoints={chartPoints}
-          name={"expenses"}
-          data={allExpensesData}
-        />
-        <Percentage />
-
-        <div className="flex h-16 items-center gap-12 mt-8">
-          <button
-            onClick={handleModalForm}
-            className="bg-secondColor w-40 h-12 rounded-full transition-all duration-300 hover:bg-[#28bf8a]"
-          >
-            Add new expense
-          </button>
-        </div>
-
-        <LatestAdded name='expenses'/>
-
-        <h2 className="mt-8 text-4xl">Transactions</h2>
-        <TransactionList
-          name="expenses"
-          data={data}
-          isPending={isPending}
-          error={error}
-          isError={isError}
-        />
-
-        <Link
-          to={"all-transactions"}
-          className="bg-secondColor flex items-center justify-center my-4 w-40 h-12 rounded-full transition-all duration-300 hover:bg-[#28bf8a]"
-        >
-          Show all expenses
+      <PageHeader title="Wydatki">
+        <Link to="/expenses/new" className={`${primaryButtonClass} flex items-center`}>
+          + Dodaj
         </Link>
+      </PageHeader>
+      <MonthSwitcher value={month} onChange={setMonth} />
+
+      <div className="px-4 mt-2">
+        {isPending && <p className="text-neutral-400">Wczytywanie...</p>}
+        <ErrorText>{error}</ErrorText>
 
         {data && (
-          <PageNumber
-            maxPage={data.totalPages}
-            page={pageNumber}
-            increase={pageIncrement}
-            decrease={pageDecrement}
-          />
+          <p className="text-sm text-neutral-400 mb-3">
+            {expenses.length} wydatków, razem {formatMoney(total)}
+          </p>
         )}
-      </main>
+
+        <ul className="flex flex-col gap-2">
+          {expenses.map((expense) => (
+            <li key={expense.slug}>
+              <Link
+                to={`/expenses/${expense.slug}`}
+                className="block bg-thirdColor rounded-2xl p-4 active:bg-neutral-800"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <span className="font-semibold break-words min-w-0">{expense.title}</span>
+                  <span className="font-semibold tabular-nums whitespace-nowrap">
+                    {formatMoney(expense.price)}
+                  </span>
+                </div>
+                <p className="text-sm text-neutral-400 mt-1">
+                  {expense.categoryPath.join(" › ") || "Bez kategorii"}
+                </p>
+                <p className="text-sm text-neutral-500 mt-1">
+                  {formatDay(expense.date)} · {expense.memberName ?? "?"} · karta{" "}
+                  {cardLabel[expense.paymentSource] ?? "?"}
+                  {expense.usageAmount != null &&
+                    ` · ${formatUsage(expense.usageAmount, expense.unit)}`}
+                </p>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </div>
     </>
   );
 };

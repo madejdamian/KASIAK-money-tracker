@@ -110,3 +110,11 @@ Stan na dzień analizy (kod pochodzi z gotowego projektu).
 - Frontend nie jest jeszcze dopasowany: formularze nadal używają starych kategorii-enumów, więc dodawanie wydatków i wpłat z UI nie zadziała do czasu etapu 4.
 - Budżet liczony na bieżąco (nic nie jest zapisywane): saldo miesiąca = dodatnie saldo poprzedniego miesiąca + wpłaty - wydatki zapłacone kartą wspólną. Wydatki z karty prywatnej nie zmniejszają budżetu (są tylko pokazywane osobno); zwrot z konta wspólnego = zmiana rodzaju płatności na wspólną. Ujemne saldo nie przenosi się dalej.
 - Dane logowania jedynego konta pochodzą ze zmiennych środowiskowych `APP_USERNAME` i `APP_PASSWORD` (wzór w `backend/.env.example`).
+
+### Etap 4 (frontend) - stan
+- Stary interfejs (strona główna, dashboard, wykresy, lista transakcji, ustawienia konta) został usunięty i zastąpiony nowym, mobilnym interfejsem po polsku: dolna nawigacja, ekrany Budżet, Wydatki, Wpłaty, Ustawienia oraz logowanie.
+- Budżet: wybór miesiąca, saldo, przeniesienie z poprzedniego miesiąca, wpłaty (też per domownik), wydatki ze wspólnej karty i osobno z prywatnych.
+- Wydatki i wpłaty: lista miesiąca, formularz dodawania/edycji/usuwania. Formularz wydatku: kwota, kategoria (dowolny poziom), zużycie (gdy kategoria ma jednostkę), domownik, karta, data. Formularz zapamiętuje ostatnio wybrane: kategorię, domownika, kartę.
+- Ustawienia: zarządzanie domownikami i drzewem kategorii (dodawanie, zmiana nazwy, przenoszenie, jednostka, usuwanie), wylogowanie.
+- Wykresy, drill-down po kategoriach i porównania miesięczne przejdą do etapu 5; usunięte stare wykresy nie pasowały do nowego modelu.
+- Frontend nie został zbudowany ani uruchomiony (brak dostępu do npm w środowisku); sprawdzono tylko składnię i odwołania do modułów.

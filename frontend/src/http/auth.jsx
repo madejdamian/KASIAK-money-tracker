@@ -1,46 +1,41 @@
-export async function login(values) {
-  const response = await fetch(
-    "http://localhost:8080/expense-tracker/api/v1/auth/authenticate",
-    {
-      method: "POST",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(values),
-    }
-  );
+import { API_URL, ApiError, errorText } from "./base";
 
+async function readToken(response) {
   if (!response.ok) {
-    const error = await response.json();
-    throw error.message;
+    let body = null;
+    try {
+      body = await response.json();
+    } catch {
+      // the response had no JSON body
+    }
+    throw new ApiError(errorText(body));
   }
 
   const result = await response.json();
-
   if (!result.token) {
-    return null;
-  } else {
-    localStorage.setItem("token", result.token);
+    throw new ApiError("Brak tokenu w odpowiedzi serwera.");
   }
+  localStorage.setItem("token", result.token);
+}
+
+export async function login(values) {
+  const response = await fetch(`${API_URL}/auth/authenticate`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(values),
+  });
+  await readToken(response);
 }
 
 export async function refreshToken() {
-  const response = await fetch(
-    "http://localhost:8080/expense-tracker/api/v1/auth/refresh-token",
-    {
-      method: "POST",
-      credentials: "include",
-    }
-  );
-  if (!response.ok) {
-    const error = await response.json();
-    throw error.message;
-  }
+  const response = await fetch(`${API_URL}/auth/refresh-token`, {
+    method: "POST",
+    credentials: "include",
+  });
+  await readToken(response);
+}
 
-  const result = await response.json();
-
-  if (!result.token) {
-    return null;
-  } else {
-    localStorage.setItem("token", result.token);
-  }
+export function logout() {
+  localStorage.removeItem("token");
 }

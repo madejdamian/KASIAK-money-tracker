@@ -1,29 +1,10 @@
-# Production stack for the VPS. Only Caddy publishes ports (80 and 443): it gets the HTTPS
-# certificate for KASIAK_HOST by itself and forwards everything to the app. The app and the
-# database stay on the internal network and have no ports on the host.
+# Production stack for the VPS. The app listens only on the server itself (127.0.0.1:8080); it is
+# reached from your phone and computer through Tailscale, which adds HTTPS (`tailscale serve`,
+# see the steps in PROJECT_NOTES.md). The database has no ports at all.
 #
-# On the server this folder is used as it is (copy compose.yml, Caddyfile, backup.sh, and create .env
+# On the server this folder is used as it is (copy compose.yml and backup.sh, and create .env
 # from .env.example). The image comes from GitHub (workflow "Publish image").
 services:
-  caddy:
-    image: caddy:2-alpine
-    container_name: kasiak-caddy
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-    environment:
-      KASIAK_HOST: ${KASIAK_HOST}
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy_data:/data
-      - caddy_config:/config
-    depends_on:
-      - app
-    networks:
-      - internal
-    mem_limit: 96m
-
   db:
     image: postgres:16-alpine
     container_name: kasiak-db
@@ -61,14 +42,15 @@ services:
       SHOW_SQL: "false"
       # the server is small and shared with another app: keep the heap modest
       JAVA_TOOL_OPTIONS: -Xmx320m -Xss512k
+    ports:
+      # only the server itself can reach it; Tailscale forwards to this port
+      - "127.0.0.1:8080:8080"
     networks:
       - internal
     mem_limit: 640m
 
 volumes:
   kasiak_pg:
-  caddy_data:
-  caddy_config:
 
 networks:
   internal:

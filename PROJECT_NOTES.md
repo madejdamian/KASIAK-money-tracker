@@ -52,6 +52,24 @@ Ostatnia aktualizacja: 2026-10-28. Ostatni commit w repozytorium to nadal `262eb
 
 ## 7. Następne kroki
 1. **Commit** zmian (najlepiej w kilku logicznych częściach; w korzeniu leżą też dwa pliki z logo, `PRODUCT.md` i `Dockerfile`).
-2. **Wdrożenie na VPS:** reverse proxy z HTTPS (np. Caddy) kierujące na port 8080 kontenera `app`; baza bez publicznego portu; silne sekrety w zmiennych środowiskowych poza repo; regularne kopie `pg_dump` z crona; plan aktualizacji. Do ustalenia: jaki VPS i system, czy jest domena z rekordem A.
-3. Sprawdzić instalację PWA na iPhonie po uzyskaniu HTTPS.
+2. **Wdrożenie na VPS (Mikrus `srv75.mikr.us`, maszyna 215) przez Tailscale**: patrz sekcja 8.
+3. Sprawdzić instalację PWA na iPhonie po wdrożeniu (adres Tailscale ma prawdziwy HTTPS).
 4. Opcjonalnie: posprzątać lint, zaktualizować `REQUIREMENTS.md`, napisać do autora `rodis00/expense-tracker` w sprawie licencji.
+
+## 8. Wdrożenie: Mikrus + Tailscale (prywatnie)
+**Serwer:** Mikrus, wspólny adres `65.109.65.35` = `srv75.mikr.us`. SSH: `ssh root@srv75.mikr.us -p 10215` (port 22 jest zamknięty). Porty 80/443 tego adresu należą do nginx Mikrusa, więc publiczny HTTPS z Let's Encrypt tu nie zadziała. Na serwerze działa już acadeum (osobny projekt i osobna domena, przez Cloudflare Tunnel); Kasiak jest od niego całkiem niezależny. 2 GB RAM, ok. 1,5 GB wolne.
+
+**Podejście:** obraz buduje GitHub Actions (`.github/workflows/publish.yml` → `ghcr.io/madejdamian/kasiak:latest`), serwer go tylko pobiera. Aplikacja słucha na `127.0.0.1:8080`, a **Tailscale** (`tailscale serve`) wystawia ją jako HTTPS w prywatnej sieci Damiana (telefon i komputer z aplikacją Tailscale). Pliki: `deploy/compose.yml`, wzór ustawień w `deploy/` (plik przykładowy `.env`) i `deploy/backup.sh`.
+
+**Kroki:**
+1. Commit + `git push` na `main`; poczekać, aż workflow „Publish image” w zakładce Actions będzie zielony.
+2. Konto Tailscale (tailscale.com). W panelu admina: *DNS* → włączyć **MagicDNS** i **HTTPS Certificates**.
+3. W panelu Mikrusa, jeśli jest taka opcja, włączyć TUN. Na serwerze: `curl -fsSL https://tailscale.com/install.sh | sh`, potem `tailscale up` (otworzyć wypisany link i zatwierdzić). Bez TUN działa tryb userspace (`tailscaled --tun=userspace-networking`).
+4. Skopiować pliki: `ssh -p 10215 root@srv75.mikr.us 'mkdir -p /root/kasiak'`, potem `scp -P 10215 deploy/compose.yml deploy/backup.sh root@srv75.mikr.us:/root/kasiak/`.
+5. Na serwerze w `/root/kasiak` utworzyć plik `.env` według wzoru z `deploy/` (`FRONTEND_PORT` = `https://` + nazwa z `tailscale status`, np. `https://sandra215.<sieć>.ts.net`; hasło do logowania min. 8 znaków).
+6. `docker compose pull && docker compose up -d`, potem `tailscale serve --bg 8080` (wypisze adres HTTPS).
+7. Na telefonie i komputerze zainstalować Tailscale (to samo konto) i otworzyć adres. Na iPhonie: Safari → Udostępnij → „Do ekranu początkowego”.
+8. Kopie zapasowe: `chmod +x backup.sh` i w cronie `0 3 * * * /root/kasiak/backup.sh` (14 ostatnich kopii w `/root/kasiak-backups`).
+9. Aktualizacja później: `git push`, na serwerze `cd /root/kasiak && docker compose pull && docker compose up -d`.
+
+**Ochrona logowania:** 5 błędnych haseł z jednego adresu w 15 min daje 429, a 30 błędów łącznie blokuje wszystkich na chwilę (`LoginAttemptLimiter`). Przez Tailscale adres klienta to `127.0.0.1`, więc limit działa de facto globalnie, co przy jednym użytkowniku jest w porządku.
